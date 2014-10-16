@@ -1,3 +1,4 @@
+package inf.unibz.data_mining.components;
 
 public class Item {
 	

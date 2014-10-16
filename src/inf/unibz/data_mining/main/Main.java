@@ -1,3 +1,6 @@
+package inf.unibz.data_mining.main;
+import inf.unibz.data_mining.apriori.Apriori;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -5,11 +8,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class MainARFF {
+public class Main {
 	
 	public static void main(String[] args) throws IOException{
 		cleanData("./bank.csv", "./bank_marketing.arff");
 		cleanData("./bank-full.csv", "./bank_marketing_full.arff");
+		Apriori ap = new Apriori();
+		ap.extractData();
+		ap.generateKItemset();
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{
