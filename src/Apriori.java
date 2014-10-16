@@ -12,21 +12,32 @@ public class Apriori {
 		
 	public static void main(String args[]) throws IOException
 	{
+		ArrayList<Item> transactions = new ArrayList<Item>();
 		FileReader fr = new FileReader("./bank_marketing.arff");
 		BufferedReader br = new BufferedReader(fr);
-		String line = br.readLine();
-		while (line != "@DATA" && line != null)
-		{
-			br.readLine();
+		String currentLine = br.readLine();
+		System.out.println("Start\n"+currentLine);
+		while (currentLine != null)
+		{	
+			if (currentLine.equals("@DATA"))
+			{
+				break;
+			}
+			currentLine = br.readLine();
 		}
-		line = br.readLine();
+		currentLine = br.readLine();
 		StringTokenizer st = null;
-		while (line != null){
-			st = new  StringTokenizer(line, ",");
+		System.out.println(currentLine);
+		while (currentLine != null){
+			st = new  StringTokenizer(currentLine, ",");
+			Item currentItem = null;
 			for(int i = 0; i < st.countTokens() - 1; i++){
+				currentItem = new Item(ATTRIBUTES_NAME[i], st.nextToken());
+				transactions.add(currentItem);
 				//TODO read the line and fill the list of the k-itemset
 			}
 		}
+		br.close();
 	}
 
 }
