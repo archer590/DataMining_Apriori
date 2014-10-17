@@ -1,0 +1,18 @@
+% 1. Title: Bank Marketing
+%
+% 2. Sources:
+% Created by: Paulo Cortez (Univ. Minho) and SŽrgio Moro (ISCTE-IUL) @ 2012
+
+@RELATION	sample
+
+@ATTRIBUTE	age			NUMERIC
+@ATTRIBUTE	job			NOMINAL
+@ATTRIBUTE	marital		NOMINAL
+@ATTRIBUTE	education	NOMINAL
+@ATTRIBUTE	default		NOMINAL
+
+@DATA
+A,C,D
+B,C,E
+A,B,C,E
+B,E
