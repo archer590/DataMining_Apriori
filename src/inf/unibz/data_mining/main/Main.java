@@ -11,6 +11,7 @@ import java.io.IOException;
 public class Main {
 	
 	public static void main(String[] args) throws IOException{
+		System.out.println("ARFF parser for data mining course.");
 		cleanData("./bank.csv", "./bank_marketing.arff");
 		cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 		Apriori ap = new Apriori();
@@ -59,6 +60,5 @@ public class Main {
 		}
 		bw.close();
 		br.close();
-		System.out.println("ARFF parser for data mining course.");
 	}
 }
