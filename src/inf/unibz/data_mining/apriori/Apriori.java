@@ -15,13 +15,14 @@ public class Apriori {
 	
 //	public static final String[] ATTRIBUTES_NAME = {"age","job","marital","education","default","balance","housing","loan","contact","day","month","duration","campaign","pdays","previuos","poutcome","y"};
 	public static final String[] ATTRIBUTES_NAME = {"first","second","third","fourth","fifth"};
+	private ArrayList<Item> items;
 	private Hashtable<String, Integer> itemSupport;
 	
 	public Apriori(){}
 		
 	public List<Item> extractData() throws IOException
 	{
-		ArrayList<Item> items = new ArrayList<Item>();
+		items = new ArrayList<Item>();
 		FileReader fr = new FileReader("./sample_transactions.arff");
 		BufferedReader br = new BufferedReader(fr);
 		String currentLine = br.readLine();
@@ -47,22 +48,24 @@ public class Apriori {
 				if(!token.equals("?")){
 					currentItem = new Item(ATTRIBUTES_NAME[i], token);
 					System.out.println("Current item: " + currentItem.toString());
-					Integer support = itemSupport.get(currentItem.toString());
-					if(support != null)
-						itemSupport.replace(currentItem.toString(), ++support);
-					else
-						itemSupport.put(currentItem.toString(), 1);
+					items.add(currentItem);
 				}
 			}
 			currentLine = br.readLine();
 		}
-		for(String i : itemSupport.keySet())
-			System.out.println(i + ": " + itemSupport.get(i));
 		br.close();
 		return items;
 	}
 	
 	public void generateKItemset(){
-		//TODO
+		for(Item i : items){
+			Integer support = itemSupport.get(i.toString());
+			if(support != null)
+				itemSupport.replace(i.toString(), ++support);
+			else
+				itemSupport.put(i.toString(), 1);
+		}
+		for(String i : itemSupport.keySet())
+			System.out.println(i + ": " + itemSupport.get(i));
 	}
 }
