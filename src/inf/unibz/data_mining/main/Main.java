@@ -15,7 +15,8 @@ public class Main {
 		cleanData("./bank.csv", "./bank_marketing.arff");
 		cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 		Apriori ap = new Apriori();
-		ap.extractData();
+		ap.scanData();
+		ap.getItems();
 		ap.generateKItemset();
 	}
 	

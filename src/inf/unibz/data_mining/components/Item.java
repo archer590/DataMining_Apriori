@@ -4,7 +4,17 @@ public class Item {
 	
 	String attributeName = null;
 	Object attributeValue = null;
+	int attributeOrder;
 	
+	
+	public int getAttributeOrder() {
+		return attributeOrder;
+	}
+
+	public void setAttributeOrder(int attributeOrder) {
+		this.attributeOrder = attributeOrder;
+	}
+
 	public Item(String attributeName, Object attributeValue)
 	{
 		this.attributeName = attributeName;
