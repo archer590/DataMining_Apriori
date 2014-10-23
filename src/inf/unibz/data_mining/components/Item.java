@@ -40,5 +40,11 @@ public class Item {
 	public String toString(){
 		return "{" + attributeName + ", " + attributeValue + "}";
 	}
+	
+	public boolean equals(Item t){
+		if(this.getAttributeName().equals(t.getAttributeName()) && this.getAttributeValue().equals(t.getAttributeValue()))
+			return true;
+		return false;
+	}
 
 }

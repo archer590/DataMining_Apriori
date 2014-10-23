@@ -4,13 +4,13 @@ import java.util.ArrayList;
 
 public class ItemSet {
 	
-	private ArrayList<Item> items;
+	private ArrayList<Integer> items;
 	private int itemSupport;
 	int maxOrder;
+	int minOrder;
 	
 	public ItemSet(){
 		maxOrder = -1;
-		computeMaxOrder();
 	}
 
 	public int getMaxOrder() {
@@ -21,16 +21,16 @@ public class ItemSet {
 		this.maxOrder = maxOrder;
 	}
 
-	public ArrayList<Item> getItems() {
+	public ArrayList<Integer> getItems() {
 		return items;
 	}
 
-	public void setItems(ArrayList<Item> items) {
+	public void setItems(ArrayList<Integer> items) {
 		this.items = items;
 	}
 	
-	public void setItem(Item...items){
-		for(Item i : items)
+	public void setItem(int...items){
+		for(int i : items)
 			this.items.add(i);
 	}
 
@@ -44,17 +44,23 @@ public class ItemSet {
 	
 	public String toString(){
 		String res = "[";
-		for(Item i : items){
-			res += i.toString() + ", "; 
+		for(int i : items){
+			res += String.valueOf(i) + ", "; 
 		}
 		res += "]";
 		return res;
 	}
 	
-	public void computeMaxOrder(){
-		for(Item i : items)
-			if(i.getAttributeOrder() > maxOrder)
-				maxOrder = i.getAttributeOrder();
-	}
+//	public void computeMaxOrder(){
+//		for(Item i : items)
+//			if(i.getAttributeOrder() > maxOrder)
+//				maxOrder = i.getAttributeOrder();
+//	}
+//	
+//	public void computeMinOrder(){
+//		for(Item i : items)
+//			if(i.getAttributeOrder() < minOrder)
+//				minOrder = i.getAttributeOrder();
+//	}
 
 }

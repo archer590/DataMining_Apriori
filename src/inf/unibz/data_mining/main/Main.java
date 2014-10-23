@@ -17,7 +17,8 @@ public class Main {
 		Apriori ap = new Apriori();
 		ap.scanData();
 		ap.getItems();
-		ap.generateKItemset();
+		//ap.generateKItemset();
+		System.out.println("\nEND");
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{
@@ -30,7 +31,7 @@ public class Main {
 		newLine = "% 1. Title: Bank Marketing\n"
 				+ "%\n"
 				+ "% 2. Sources:\n"
-				+ "% Created by: Paulo Cortez (Univ. Minho) and SŽrgio Moro (ISCTE-IUL) @ 2012\n\n"
+				+ "% Created by: Paulo Cortez (Univ. Minho) and Sï¿½rgio Moro (ISCTE-IUL) @ 2012\n\n"
 				+ "@RELATION\tbank_marketing\n\n"
 				+ "@ATTRIBUTE\tage\t\t\tNUMERIC\n"
 				+ "@ATTRIBUTE\tjob\t\t\tNOMINAL\n"
@@ -61,5 +62,6 @@ public class Main {
 		}
 		bw.close();
 		br.close();
+		
 	}
 }
