@@ -11,13 +11,14 @@ import java.io.IOException;
 public class Main {
 	
 	public static void main(String[] args) throws IOException{
-		System.out.println("ARFF parser for data mining course.");
+		System.out.println("ARFF parser for data mining course.\n");
+		System.out.println("START\n");
 		cleanData("./bank.csv", "./bank_marketing.arff");
 		cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 		Apriori ap = new Apriori();
 		ap.scanData();
 		ap.getItems();
-		//ap.generateKItemset();
+		ap.generateKItemset();
 		System.out.println("\nEND");
 	}
 	

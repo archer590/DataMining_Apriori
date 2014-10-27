@@ -11,6 +11,7 @@ public class ItemSet {
 	
 	public ItemSet(){
 		maxOrder = -1;
+		items = new ArrayList<Integer>();
 	}
 
 	public int getMaxOrder() {
@@ -43,12 +44,7 @@ public class ItemSet {
 	}
 	
 	public String toString(){
-		String res = "[";
-		for(int i : items){
-			res += String.valueOf(i) + ", "; 
-		}
-		res += "]";
-		return res;
+		return items.toString() + "->" + itemSupport;
 	}
 	
 //	public void computeMaxOrder(){
