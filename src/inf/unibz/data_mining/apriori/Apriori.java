@@ -77,35 +77,28 @@ import java.util.StringTokenizer;
 					if(!contains(mappingTable.values(), currentItem)){
 						mappingTable.put(keyGenerator, currentItem);
 						System.out.println(mappingTable);
+						keyGenerator++;
 					}
-					keyGenerator++;
 				}
 			}
 		}
+		System.out.println();
 		return mappingTable.values();
 	}
 	
 	public void generateKItemset() {
-//		int initialItemsets = itemsets.size();
-//		int updateSize = 0;
-		itemsets = populateFirstKItemSets();
-		System.out.println(itemsets);
-		candidates = itemsets;
-		for(int k = 1; candidates.size() != 0; k++){
+		candidates = populateFirstKItemSets();
+		itemsets.addAll(computeSupport(candidates));
+		checkCandidateSupport(1);
+		int i = -1;
+		for(int k = 2; candidates.size() != 0; k++){
 			candidateGeneration(itemsets, k);
 			itemsets.addAll(computeSupport(candidates));
-			System.out.println(itemsets);
-			pruning();
-			itemsets.addAll(candidates);
+			if(candidates.size() != 0)
+				checkCandidateSupport(k);
+			i = k;
 		}
-	}
-	
-	public void pruning() {
-		for (ItemSet is : itemsets.toArray(new ItemSet[] {}))
-			if (is.getItemSupport() < minSup)
-				itemsets.remove(is); // pruning itemsets with no minimum support
-			else
-				System.out.println(is.toString());
+		pruning(i);
 	}
 	
 	public void candidateGeneration(ArrayList<ItemSet> kItemSets, int k) {
@@ -115,18 +108,23 @@ import java.util.StringTokenizer;
 			candidates = new ArrayList<ItemSet>();
 			for (int i = 0; i < kItemSets.size(); i++) {
 				outer = kItemSets.get(i).getItems();
-				for (int j = i + 1; j < kItemSets.size(); j++) {
-					inner = kItemSets.get(j).getItems();
-					ItemSet candidate = null;
-					for (int h = 0; h < inner.size(); h++)
-					{
-						if(mappingTable.get(outer.get(outer.size()-1)).getAttributeOrder() < mappingTable.get(inner.get(h)).getAttributeOrder())
+				if(outer.size() == k-1){
+					for (int j = i + 1; j < kItemSets.size(); j++) {
+						inner = kItemSets.get(j).getItems();
+						ItemSet candidate = null;
+						for (int h = 0; h < inner.size(); h++)
 						{
-							candidate = new ItemSet();
-							candidate.getItems().addAll(outer);
-							candidate.getItems().add(inner.get(h));
-							if(!contains(candidates, candidate))
-								candidates.add(candidate);
+							Integer key = outer.get(outer.size()-1); //get the item mapped to the integer at the last position of the outer object
+							if(mappingTable.get(key).getAttributeOrder() < mappingTable.get(inner.get(h)).getAttributeOrder())
+							{
+								candidate = new ItemSet();
+								candidate.getItems().addAll(outer);
+								candidate.getItems().add(inner.get(h));
+								if(!contains(candidates, candidate)){
+									candidates.add(candidate);
+									System.out.println("Candidate generated: " + candidate.getItems());
+								}
+							}
 						}
 					}
 				}
@@ -149,8 +147,10 @@ import java.util.StringTokenizer;
 //					System.out.println("i: "+i+"\nAttribute: "+it.toString()+", AttrOrder: "+it.getAttributeOrder()+"\nStringValue: "+splitted[it.getAttributeOrder()]+"\nMappingTValue: "+it.getAttributeValue());
 					if (splitted[it.getAttributeOrder()].equals(it.getAttributeValue()))
 						isPresent = true;
-					else 
+					else {
 						isPresent = false;
+						break;
+					}
 				}
 				
 				if(isPresent){
@@ -162,6 +162,38 @@ import java.util.StringTokenizer;
 			result.add(is);
 		}
 		return result;
+	}
+	
+	public void checkCandidateSupport(int k) {
+		System.out.println("Itemsets for k = " + k);
+		for (ItemSet is : itemsets.toArray(new ItemSet[] {}))
+			if (is.getItemSupport() < minSup)
+				itemsets.remove(is); //eliminate candidate with no minimum support
+			else{
+				System.out.println(is.toStringSupport());
+			}
+		System.out.println();
+	}
+	
+	public void pruning(int k){
+			ArrayList<ItemSet> maxItemSets = new ArrayList<ItemSet>();
+			for(ItemSet is : itemsets)
+				if(is.getItems().size() == k){
+					maxItemSets.add(is);
+					itemsets.remove(is);
+				}
+			for(ItemSet is : maxItemSets){
+				
+				for(int i=0; i<is.getItems().size();i++){
+					 
+					for(int j=i+1; j<is.getItems().size(); j++){
+						ItemSet tmp = new ItemSet();
+						tmp.setItems(is.getItems().get(i),is.getItems().get(j));
+//						if(maxItemSets.con)
+					}
+				}				
+			}
+				
 	}
 	
 	public boolean contains(Collection<Item> items, Item i){
@@ -197,9 +229,22 @@ import java.util.StringTokenizer;
 		ArrayList<ItemSet> iSs = new ArrayList<ItemSet>();
 		for(int i : keys){
 			ItemSet is = new ItemSet();
-			is.setItem(i);
+			is.setItems(i);
 			iSs.add(is);
 		}
 		return iSs;
 	}
+
+	public boolean containSubItemSet(ItemSet is1, ItemSet is2){
+		if(is1.toString().equals(is2.toString()))
+			return true;
+		return false;
+	}
+	
+	public ArrayList<ItemSet> generateItemSetsPermutation(ArrayList<ItemSet> set){
+		ArrayList<ItemSet> result = new ArrayList<ItemSet>();
+		
+		return result;
+	}
+
 }

@@ -30,8 +30,8 @@ public class ItemSet {
 		this.items = items;
 	}
 	
-	public void setItem(int...items){
-		for(int i : items)
+	public void setItems(Integer...items){
+		for(Integer i : items)
 			this.items.add(i);
 	}
 
@@ -43,20 +43,12 @@ public class ItemSet {
 		this.itemSupport = itemSupport;
 	}
 	
-	public String toString(){
+	public String toStringSupport(){
 		return items.toString() + "->" + itemSupport;
 	}
 	
-//	public void computeMaxOrder(){
-//		for(Item i : items)
-//			if(i.getAttributeOrder() > maxOrder)
-//				maxOrder = i.getAttributeOrder();
-//	}
-//	
-//	public void computeMinOrder(){
-//		for(Item i : items)
-//			if(i.getAttributeOrder() < minOrder)
-//				minOrder = i.getAttributeOrder();
-//	}
+	public String toString(){
+		return items.toString();
+	}
 
 }
