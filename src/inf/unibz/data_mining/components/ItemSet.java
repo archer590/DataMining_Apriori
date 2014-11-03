@@ -44,11 +44,31 @@ public class ItemSet {
 	}
 	
 	public String toStringSupport(){
-		return items.toString() + "->" + itemSupport;
+		return "itemset: " + items.toString() + "->" + itemSupport;
 	}
 	
 	public String toString(){
 		return items.toString();
+	}
+	
+	public String toItemString(){
+		String itemsToString = "";
+		for(Integer i : items){
+			itemsToString += i;
+		}
+		return itemsToString;
+	}
+	
+	public boolean contains(ArrayList<String> combinations){
+		boolean check = false;
+		for(int i = 0; i < items.size(); i++){
+			if(String.valueOf(items.get(i)).equals(combinations.get(i)))
+				check = true;
+			else
+				return false;
+			
+		}
+		return check;
 	}
 
 }

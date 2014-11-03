@@ -11,15 +11,30 @@ import java.io.IOException;
 public class Main {
 	
 	public static void main(String[] args) throws IOException{
-		System.out.println("ARFF parser for data mining course.\n");
-		System.out.println("START\n");
+		System.out.println("###############################################");
+		System.out.println("######### FREQUENT PATTERN GENERATION #########");
+		System.out.println("###############################################\n");
+		System.out.print("Cleaning data... ");
 		cleanData("./bank.csv", "./bank_marketing.arff");
 		cleanData("./bank-full.csv", "./bank_marketing_full.arff");
-		Apriori ap = new Apriori();
+		System.out.println("Done.");
+		Apriori ap = new Apriori("./sample_transactions.arff");
+		System.out.print("Scanning data file \"sample_transactions.arff\"... ");
 		ap.scanData();
+		System.out.println("Done.");
+		System.out.print("Generating items... ");
 		ap.getItems();
+		System.out.println("Done.");
+		System.out.print("Generated items: ");
+		System.out.println(ap.getMappingTable());
+		System.out.println();
+		System.out.println("**************************************************************************************************");
+		System.out.println("##### K-ITEMSETS GENERATION #####\n");
 		ap.generateKItemset();
-		System.out.println("\nEND");
+		System.out.println();
+		System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable());
+		System.out.println();
+		System.out.println("Done.");
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{
