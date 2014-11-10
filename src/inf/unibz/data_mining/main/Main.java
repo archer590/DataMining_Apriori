@@ -7,34 +7,73 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Scanner;
 
 public class Main {
 	
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException{
-		System.out.println("###############################################");
-		System.out.println("######### FREQUENT PATTERN GENERATION #########");
-		System.out.println("###############################################\n");
-		System.out.print("Cleaning data... ");
-		cleanData("./bank.csv", "./bank_marketing.arff");
-		cleanData("./bank-full.csv", "./bank_marketing_full.arff");
-		System.out.println("Done.");
-		Apriori ap = new Apriori("./sample_transactions.arff");
-		System.out.print("Scanning data file \"sample_transactions.arff\"... ");
-		ap.scanData();
-		System.out.println("Done.");
-		System.out.print("Generating items... ");
-		ap.getItems();
-		System.out.println("Done.");
-		System.out.print("Generated items: ");
-		System.out.println(ap.getMappingTable());
-		System.out.println();
-		System.out.println("**************************************************************************************************");
-		System.out.println("##### K-ITEMSETS GENERATION #####\n");
-		ap.generateKItemset();
-		System.out.println();
-		System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable());
-		System.out.println();
-		System.out.println("Done.");
+		int choice = 0;
+		System.out.println("APRIORI ALGORITHM");
+		System.out.println("Choose wihch algorithm do you want to run:");
+		System.out.println("1. Apriori (pure version);");
+		System.out.println("2. Apriori with database partitioning (optimized).");
+		System.out.print("Choice: ");
+		Scanner s = new Scanner(System.in);
+		choice = s.nextInt();		
+		if(choice == 1){			
+			System.out.println("APRIORI ALGORITHM");
+			System.out.println("###############################################");
+			System.out.println("######### FREQUENT PATTERN GENERATION #########");
+			System.out.println("###############################################\n");
+			System.out.print("Cleaning data... ");
+			cleanData("./bank.csv", "./bank_marketing.arff");
+			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
+			System.out.println("Done.");
+			Apriori ap = new Apriori("./bank_marketing_full.arff");
+			System.out.print("Scanning data file \"bank_marketing_full.arff\"... ");
+			ap.scanData();
+			System.out.println("Done.");
+			System.out.print("Generating items... ");
+			ap.getItems();
+			System.out.println("Done.");
+			System.out.print("Generated items: ");
+			System.out.println(ap.getMappingTable());
+			System.out.println();
+			System.out.println("**************************************************************************************************");
+			System.out.println("##### K-ITEMSETS GENERATION #####\n");
+			ap.generateKItemset();
+			System.out.println();
+			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable());
+			System.out.println();
+			System.out.println("Done.");
+		} else if (choice == 2) {
+			System.out.println("APRIORI ALGORITHM WITH DATABASE PARTITIONING");
+			System.out.println("###############################################");
+			System.out.println("######### FREQUENT PATTERN GENERATION #########");
+			System.out.println("###############################################\n");
+			System.out.print("Cleaning data... ");
+			cleanData("./bank.csv", "./bank_marketing.arff");
+			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
+			System.out.println("Done.");
+			Apriori ap = new Apriori("./bank_marketing.arff");
+			System.out.print("Scanning data file \"bank_marketing.arff\"... ");
+			ap.partitioningDB();
+			System.out.println("Done.");
+			System.out.print("Generating items... ");
+			ap.getItems();
+			System.out.println("Done.");
+			System.out.print("Generated items: ");
+			System.out.println(ap.getMappingTable());
+			System.out.println();
+			System.out.println("**************************************************************************************************");
+			System.out.println("##### K-ITEMSETS GENERATION #####\n");
+			ap.generateKItemset();
+			System.out.println();
+			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable());
+			System.out.println();
+			System.out.println("Done.");
+		}
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{

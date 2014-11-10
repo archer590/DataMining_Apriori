@@ -3,6 +3,7 @@ package inf.unibz.data_mining.apriori;
 import inf.unibz.data_mining.components.Item;
 import inf.unibz.data_mining.components.ItemSet;
 
+import java.awt.font.NumericShaper;
 	import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -12,16 +13,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 	
 	public class Apriori {
 	
-		// public static final String[] ATTRIBUTES_NAME =
-	// {"age","job","marital","education","default","balance","housing","loan","contact","day","month","duration","campaign","pdays","previuos","poutcome","y"};
-	public static final String[] ATTRIBUTES_NAME = { "first", "second", "third", "fourth", "fifth" };
+		 public static final String[] ATTRIBUTES_NAME =
+	 {"age","job","marital","education","default","balance","housing","loan","contact","day","month","duration","campaign","pdays","previuos","poutcome","y"};
+//	public static final String[] ATTRIBUTES_NAME = { "first", "second", "third", "fourth", "fifth" };
 	public static final int minSup = 2;
 	ArrayList<ItemSet> itemsets;
 	ArrayList<String> fileLines;
+	ArrayList<ArrayList<String>> partitions;
 	BufferedReader br;
 	HashMap<Integer, Item> mappingTable;
 	ArrayList<ItemSet> candidates;
@@ -319,5 +322,43 @@ import java.util.StringTokenizer;
     	}
     	return reversedTable;
     }
+    
+    @SuppressWarnings("resource")
+	public void partitioningDB() throws IOException{
+    	System.out.print("\nHow many transactions per partitions?   ");
+    	Scanner s = new Scanner(System.in);
+    	int linesPerPartition = s.nextInt();
+    	int numberOfTransitions = 0;
+    	int counter = 0;
+    	String currentLine = br.readLine();
+		while (currentLine != null) {
+			if (currentLine.equals("@DATA")) {
+				break;
+			}
+			currentLine = br.readLine();
+		}
+		currentLine = br.readLine();
+		
+		while (currentLine != null) {
+			fileLines.add(currentLine);
+			currentLine = br.readLine();
+		}
 
+		
+//		while (currentLine != null) {
+//			currentLine = br.readLine();
+//			numberOfTransitions++;
+//		}
+		numberOfTransitions = fileLines.size();
+		partitions = new ArrayList<ArrayList<String>>();
+		ArrayList<String> tmp = null;
+		for(double j = 0.0; j < numberOfTransitions; j++){		
+			if(j+1d % linesPerPartition == 0.0 || j == 0.0)
+				tmp = new ArrayList<String>();	
+			tmp.add(fileLines.get(( (int) j)));
+			partitions.add(tmp);
+		}
+		br.close();
+    }
+    
 }
