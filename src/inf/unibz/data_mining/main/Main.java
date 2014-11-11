@@ -1,5 +1,6 @@
 package inf.unibz.data_mining.main;
 import inf.unibz.data_mining.apriori.Apriori;
+import inf.unibz.data_mining.components.ItemSet;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -7,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
@@ -30,8 +32,8 @@ public class Main {
 			cleanData("./bank.csv", "./bank_marketing.arff");
 			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 			System.out.println("Done.");
-			Apriori ap = new Apriori("./bank_marketing_full.arff");
-			System.out.print("Scanning data file \"bank_marketing_full.arff\"... ");
+			Apriori ap = new Apriori(args[0], Integer.parseInt(args[1]));
+//			System.out.print("Scanning data file \"bank_marketing_full.arff\"... ");
 			ap.scanData();
 			System.out.println("Done.");
 			System.out.print("Generating items... ");
@@ -42,9 +44,9 @@ public class Main {
 			System.out.println();
 			System.out.println("**************************************************************************************************");
 			System.out.println("##### K-ITEMSETS GENERATION #####\n");
-			ap.generateKItemset();
+			ArrayList<ItemSet> aux = ap.generateKItemset();
 			System.out.println();
-			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable());
+			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(aux));
 			System.out.println();
 			System.out.println("Done.");
 		} else if (choice == 2) {
@@ -56,8 +58,8 @@ public class Main {
 			cleanData("./bank.csv", "./bank_marketing.arff");
 			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 			System.out.println("Done.");
-			Apriori ap = new Apriori("./bank_marketing.arff");
-			System.out.print("Scanning data file \"bank_marketing.arff\"... ");
+			Apriori ap = new Apriori(args[0], Integer.parseInt(args[2]));
+//			System.out.print("Scanning data file \"bank_marketing.arff\"... ");
 			ap.partitioningDB();
 			System.out.println("Done.");
 			System.out.print("Generating items... ");
@@ -70,7 +72,7 @@ public class Main {
 			System.out.println("##### K-ITEMSETS GENERATION #####\n");
 			ap.generateKItemset();
 			System.out.println();
-			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable());
+			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(new ArrayList<ItemSet>()));
 			System.out.println();
 			System.out.println("Done.");
 		}

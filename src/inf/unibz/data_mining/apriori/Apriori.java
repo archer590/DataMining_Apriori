@@ -3,8 +3,7 @@ package inf.unibz.data_mining.apriori;
 import inf.unibz.data_mining.components.Item;
 import inf.unibz.data_mining.components.ItemSet;
 
-import java.awt.font.NumericShaper;
-	import java.io.BufferedReader;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -21,21 +20,22 @@ import java.util.StringTokenizer;
 		 public static final String[] ATTRIBUTES_NAME =
 	 {"age","job","marital","education","default","balance","housing","loan","contact","day","month","duration","campaign","pdays","previuos","poutcome","y"};
 //	public static final String[] ATTRIBUTES_NAME = { "first", "second", "third", "fourth", "fifth" };
-	public static final int minSup = 2;
+	private int minSup;
 	ArrayList<ItemSet> itemsets;
 	ArrayList<String> fileLines;
 	ArrayList<ArrayList<String>> partitions;
 	BufferedReader br;
 	HashMap<Integer, Item> mappingTable;
-	ArrayList<ItemSet> candidates;
-	public ArrayList<String> combinations = new ArrayList<String>();
+//	ArrayList<ItemSet> candidates;
 	
-	public Apriori(String file) {
+	
+	public Apriori(String file, int minSup) {
 		itemsets = new ArrayList<ItemSet>();
 		fileLines = new ArrayList<String>();
 		mappingTable = new HashMap<Integer, Item>();
-		candidates = new ArrayList<ItemSet>();
+//		candidates = new ArrayList<ItemSet>();
 		FileReader fr = null;
+		this.minSup = minSup;
 		try {
 			fr = new FileReader(file);
 		} catch (FileNotFoundException e) {
@@ -88,41 +88,46 @@ import java.util.StringTokenizer;
 		return mappingTable.values();
 	}
 	
-	public void generateKItemset() {
+	public ArrayList<ItemSet> generateKItemset() {
+		ArrayList<ItemSet> candidates = new ArrayList<ItemSet>();
+		ArrayList<ItemSet> itemsets = new ArrayList<ItemSet>();
 		System.out.println("GENERATING ITEMSETS OF SIZE 1...");
 		candidates = populateFirstKItemSets();
 		System.out.println("Performing pruning: NOT NECCESSARY FOR k = 1");
 		itemsets.addAll(computeSupport(candidates));
 		System.out.println("Itemsets for k = 1: "+ itemsets);
 		System.out.println("Support:");
-		checkCandidateSupport(1);
+		itemsets = checkCandidateSupport(itemsets);
 		System.out.println("**************************************************************************************************");
 		for(int k = 2; candidates.size() != 0; k++){
 			System.out.println("GENERATING ITEMSETS OF SIZE " + k + "...");
-			candidateGeneration(itemsets, k); 
+			candidates = candidateGeneration(itemsets, k); 
 			if(candidates.size() != 0){
 				ArrayList<ItemSet> candGen = new ArrayList<ItemSet>();
-				candGen.addAll(itemsets);
-				candGen.addAll(candidates);
 				System.out.println("Candidates generated (not pruned):  " + candidates);
 				System.out.println("Perorming pruning:");
-				pruning(k);
-				System.out.println();
-				itemsets.addAll(computeSupport(candidates));
-				System.out.println("Itemsets for k = " + k + ": " + itemsets);
+				candGen = pruning(k, candidates, itemsets);
+				System.out.println("Pruned: " + candGen);
+				candGen = computeSupport(candGen);
+				System.out.println("Computed support: " + candGen);
 				System.out.println("Support:");
-				checkCandidateSupport(k);
+				candGen = checkCandidateSupport(candGen);
+				System.out.println("Checked support: " + candGen);
+				itemsets.addAll(candGen);
+				System.out.println("Itemsets for k = " + k + ": " + itemsets);
 				System.out.println("**************************************************************************************************");
 			}
+			else
+				System.out.println("NO ITEMSETS WITH k = " + k + ". EXIT.");
 		}
-		
+		return itemsets;
 	}
 	
-	public void candidateGeneration(ArrayList<ItemSet> kItemSets, int k) {
+	public ArrayList<ItemSet> candidateGeneration(ArrayList<ItemSet> kItemSets, int k) {
+		ArrayList<ItemSet> candidates = new ArrayList<ItemSet>();
 		if(k != 1){
 			ArrayList<Integer> outer = null;
 			ArrayList<Integer> inner = null;
-			candidates = new ArrayList<ItemSet>();
 			for (int i = 0; i < kItemSets.size(); i++) {
 				outer = kItemSets.get(i).getItems();
 				if(outer.size() == k-1){
@@ -139,7 +144,6 @@ import java.util.StringTokenizer;
 								candidate.getItems().add(inner.get(h));
 								if(!contains(candidates, candidate)){
 									candidates.add(candidate);
-//									System.out.println("Candidate generated: " + candidate.getItems());
 								}
 							}
 						}
@@ -147,6 +151,7 @@ import java.util.StringTokenizer;
 				}
 			}
 		}
+		return candidates;
 	}
 	
 	
@@ -159,7 +164,7 @@ import java.util.StringTokenizer;
 				boolean isPresent = false;
 				for (int i = 0; i < isItems.size(); i++) {
 					Item it = mappingTable.get(isItems.get(i));
-					if (splitted[it.getAttributeOrder()].equals(it.getAttributeValue()))
+					if (splitted[it.getAttributeOrder()].equals((String) it.getAttributeValue()))
 						isPresent = true;
 					else {
 						isPresent = false;
@@ -176,34 +181,35 @@ import java.util.StringTokenizer;
 		return result;
 	}
 	
-	public void checkCandidateSupport(int k) {
-		for (ItemSet is : itemsets.toArray(new ItemSet[] {}))
+	public ArrayList<ItemSet> checkCandidateSupport(ArrayList<ItemSet> toCheck) {
+		ArrayList<ItemSet> aux = toCheck;
+		for (ItemSet is : aux.toArray(new ItemSet[] {}))
 			if (is.getItemSupport() < minSup){
-				System.out.println("\t" + is.toStringSupport() + " not enough");
-				itemsets.remove(is); //eliminate candidate with no minimum support
+//				System.out.println("\t" + is.toStringSupport() + " not enough");
+				aux.remove(is); //eliminate candidate with no minimum support
 			}
 			else{
 				System.out.println("\t" + is.toStringSupport() + " SUPPORT OK");
 			}
 		System.out.println();
+		return aux;
 	}
 	
-	public void pruning(int k){			
+	public ArrayList<ItemSet> pruning(int k, ArrayList<ItemSet> candidates, ArrayList<ItemSet> itemsets){			
 			ArrayList<ItemSet> toReturn = new ArrayList<ItemSet>();
+			ArrayList<String> combinations = null;
 			for(ItemSet is : candidates){
 				System.out.print("\n\tcandidate: " + is.toString());
 				boolean check = false;
-				combinations.clear();
-				comb1(is.toItemString(), k-1);
+				combinations = comb1(is.toItemString(), k-1);
 				System.out.print(", possible subset: ");
-				printCombinations();
+				printCombinations(combinations);
 				for(String s : combinations){
 					ArrayList<String> currentCombination = toArrayList(s);
 					for(int i = 0; i < itemsets.size(); i++){
 						ItemSet isK = itemsets.get(i);
 						if(isK.getItems().size() == k-1){
 							check = isK.contains(currentCombination);
-							System.out.println("\t\t\tsubset " + isK.getItems() + " equals to CC " + currentCombination + " --> " + check);
 							if(check)
 								break;
 						}
@@ -216,8 +222,7 @@ import java.util.StringTokenizer;
 				}
 			}
 
-			candidates.clear();
-			candidates = toReturn;
+			return toReturn;
 	}
 	
 	public boolean contains(Collection<Item> items, Item i){
@@ -276,11 +281,13 @@ import java.util.StringTokenizer;
 		return false;
 	}
 	
-	public void comb1(String s, int k) { 
-		comb1(s, "", k);
+	public ArrayList<String> comb1(String s, int k) { 
+		ArrayList<String> combinations = new ArrayList<String>();
+		comb1(s, "", k, combinations);
+		return combinations;
 	}
 	
-    private void comb1(String s, String prefix, int k) {
+    private void comb1(String s, String prefix, int k, ArrayList<String> combinations) {
         if (s.length() < k) return;
         else if (k == 0){ 
 //        	System.out.println(prefix); 
@@ -288,12 +295,12 @@ import java.util.StringTokenizer;
         	
         }
         else {
-            comb1(s.substring(1), prefix + s.charAt(0), k-1);
-            comb1(s.substring(1), prefix, k);
+            comb1(s.substring(1), prefix + s.charAt(0), k-1, combinations);
+            comb1(s.substring(1), prefix, k, combinations);
         }
     }  
     
-    public void printCombinations(){
+    public void printCombinations(ArrayList<String> combinations){
     	System.out.print("[");
     	for(int i = 0; i < combinations.size(); i++){
     		System.out.print("[" + combinations.get(i) + "]");
@@ -307,7 +314,7 @@ import java.util.StringTokenizer;
     	return this.mappingTable;
     }
     
-    public ArrayList<String> reverseMappingTable(){
+    public ArrayList<String> reverseMappingTable(ArrayList<ItemSet> itemsets){
     	ArrayList<String> reversedTable = new ArrayList<String>();
     	for(ItemSet is : itemsets){
     		String itemset = "<";
@@ -329,7 +336,6 @@ import java.util.StringTokenizer;
     	Scanner s = new Scanner(System.in);
     	int linesPerPartition = s.nextInt();
     	int numberOfTransitions = 0;
-    	int counter = 0;
     	String currentLine = br.readLine();
 		while (currentLine != null) {
 			if (currentLine.equals("@DATA")) {
@@ -343,12 +349,7 @@ import java.util.StringTokenizer;
 			fileLines.add(currentLine);
 			currentLine = br.readLine();
 		}
-
 		
-//		while (currentLine != null) {
-//			currentLine = br.readLine();
-//			numberOfTransitions++;
-//		}
 		numberOfTransitions = fileLines.size();
 		partitions = new ArrayList<ArrayList<String>>();
 		ArrayList<String> tmp = null;
