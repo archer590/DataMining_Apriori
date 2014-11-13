@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 	
@@ -61,12 +62,12 @@ import java.util.StringTokenizer;
 		br.close();
 	}
 	
-	public Collection<Item> getItems() {
+	public Collection<Item> getItems(ArrayList<String> currentFileLines, HashMap<Integer, Item> mappingTable) {
 		StringTokenizer st = null;
 		Item currentItem = null;
 		int keyGenerator = 0;
-		for (int j = 0; j < fileLines.size(); j++) {
-			st = new StringTokenizer(fileLines.get(j), ",");
+		for (int j = 0; j < currentFileLines.size(); j++) {
+			st = new StringTokenizer(currentFileLines.get(j), ",");
 			//System.out.println("# of tokens: " + st.countTokens());
 			int n = st.countTokens();
 			
@@ -88,11 +89,11 @@ import java.util.StringTokenizer;
 		return mappingTable.values();
 	}
 	
-	public ArrayList<ItemSet> generateKItemset() {
+	public ArrayList<ItemSet> generateKItemset(HashMap<Integer, Item> mappingTable) {
 		ArrayList<ItemSet> candidates = new ArrayList<ItemSet>();
 		ArrayList<ItemSet> itemsets = new ArrayList<ItemSet>();
 		System.out.println("GENERATING ITEMSETS OF SIZE 1...");
-		candidates = populateFirstKItemSets();
+		candidates = populateFirstKItemSets(mappingTable);
 		System.out.println("Performing pruning: NOT NECCESSARY FOR k = 1");
 		itemsets.addAll(computeSupport(candidates));
 		System.out.println("Itemsets for k = 1: "+ itemsets);
@@ -262,7 +263,7 @@ import java.util.StringTokenizer;
 	 * Populate the itemsets for k = 1.
 	 * @return a list with ItemSet for k = 1.
 	 */
-	public ArrayList<ItemSet> populateFirstKItemSets(){
+	public ArrayList<ItemSet> populateFirstKItemSets(HashMap<Integer, Item> mappingTable){
 		Integer[] keys = mappingTable.keySet().toArray(new Integer[] {});
 		Arrays.sort(keys);
 		ArrayList<ItemSet> iSs = new ArrayList<ItemSet>();
@@ -360,6 +361,55 @@ import java.util.StringTokenizer;
 			partitions.add(tmp);
 		}
 		br.close();
+		
+		ArrayList<ArrayList<ItemSet>> partitionItemsSets = new ArrayList<ArrayList<ItemSet>>();		
+		
+		getItems(fileLines, mappingTable);
+		
+		for(int h=0; h<partitions.size();h++){
+			ArrayList<String> currentPartition = partitions.get(h);
+			
+			Thread t = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+//					HashMap<Integer, Item> currentMappingTable = new HashMap<Integer, Item>();
+//					getItems(currentPartition, currentMappingTable);
+					generateKItemset(mappingTable);
+					
+					partitionItemsSets.add(generateKItemset(mappingTable));
+				}
+			});
+			t.start();
+		}
+		
+		mergePartitions(partitionItemsSets);
+		
+    }
+
+	public ArrayList<String> getFileLines() {
+		return fileLines;
+	}
+
+	public void setFileLines(ArrayList<String> fileLines) {
+		this.fileLines = fileLines;
+	}
+    
+    public void mergePartitions(ArrayList<ArrayList<ItemSet>> partitionItemsSets){
+    	ArrayList<ItemSet> firstPartition = partitionItemsSets.get(0);
+    		for(int j=0; j<partitionItemsSets.size()-1; j++){
+    			ArrayList<ItemSet> currentPartition = partitionItemsSets.get(j);
+    			checkElements(firstPartition, currentPartition);
+    		}
+    	
+    }
+    
+    public void checkElements(ArrayList<ItemSet> firstPartition, ArrayList<ItemSet> nPartition){
+    	for(int i=0; i<nPartition.size(); i++){
+			if (firstPartition.contains(nPartition.get(i))){
+				firstPartition.indexOf(nPartition.get(i))
+			}
+		}
     }
     
 }
