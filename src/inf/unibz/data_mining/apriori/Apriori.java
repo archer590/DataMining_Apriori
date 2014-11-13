@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 	
@@ -27,14 +26,12 @@ import java.util.StringTokenizer;
 	ArrayList<ArrayList<String>> partitions;
 	BufferedReader br;
 	HashMap<Integer, Item> mappingTable;
-//	ArrayList<ItemSet> candidates;
 	
 	
 	public Apriori(String file, int minSup) {
 		itemsets = new ArrayList<ItemSet>();
 		fileLines = new ArrayList<String>();
 		mappingTable = new HashMap<Integer, Item>();
-//		candidates = new ArrayList<ItemSet>();
 		FileReader fr = null;
 		this.minSup = minSup;
 		try {
@@ -62,6 +59,33 @@ import java.util.StringTokenizer;
 		br.close();
 	}
 	
+	public Collection<Item> getItems(ArrayList<String> currentFileLines) {
+		StringTokenizer st = null;
+		Item currentItem = null;
+		int keyGenerator = 0;
+		for (int j = 0; j < currentFileLines.size(); j++) {
+			st = new StringTokenizer(currentFileLines.get(j), ",");
+			//System.out.println("# of tokens: " + st.countTokens());
+			int n = st.countTokens();
+			
+			for (int i = 0; i < n; i++) {
+				String token = st.nextToken();
+				//System.out.println("Token: " + token);
+				if (!token.equals("?")) {
+					currentItem = new Item(ATTRIBUTES_NAME[i], token);
+					currentItem.setAttributeOrder(i);
+					
+					//System.out.println("Current item: " + currentItem.toString());
+					if(!contains(mappingTable.values(), currentItem)){
+						mappingTable.put(keyGenerator, currentItem);
+						keyGenerator++;
+					}
+				}
+			}
+		}
+		return mappingTable.values();
+	}
+	
 	public Collection<Item> getItems(ArrayList<String> currentFileLines, HashMap<Integer, Item> mappingTable) {
 		StringTokenizer st = null;
 		Item currentItem = null;
@@ -81,6 +105,8 @@ import java.util.StringTokenizer;
 					//System.out.println("Current item: " + currentItem.toString());
 					if(!contains(mappingTable.values(), currentItem)){
 						mappingTable.put(keyGenerator, currentItem);
+						if(!contains(this.mappingTable.values(), currentItem))
+							this.mappingTable.put(keyGenerator, currentItem);
 						keyGenerator++;
 					}
 				}
@@ -362,9 +388,9 @@ import java.util.StringTokenizer;
 		}
 		br.close();
 		
-		ArrayList<ArrayList<ItemSet>> partitionItemsSets = new ArrayList<ArrayList<ItemSet>>();		
+		ArrayList<ItemSet> partitionItemsSets = new ArrayList<ItemSet>();		
 		
-		getItems(fileLines, mappingTable);
+//		getItems(fileLines, mappingTable);
 		
 		for(int h=0; h<partitions.size();h++){
 			ArrayList<String> currentPartition = partitions.get(h);
@@ -373,18 +399,16 @@ import java.util.StringTokenizer;
 				
 				@Override
 				public void run() {
-//					HashMap<Integer, Item> currentMappingTable = new HashMap<Integer, Item>();
-//					getItems(currentPartition, currentMappingTable);
-					generateKItemset(mappingTable);
-					
-					partitionItemsSets.add(generateKItemset(mappingTable));
+					HashMap<Integer, Item> currentMappingTable = new HashMap<Integer, Item>();
+					getItems(currentPartition, currentMappingTable);					
+					partitionItemsSets.addAll(generateKItemset(currentMappingTable));
 				}
 			});
 			t.start();
 		}
-		
-		mergePartitions(partitionItemsSets);
-		
+		ArrayList<ItemSet> globalCandidates = new ArrayList<ItemSet>();
+		globalCandidates.addAll(cleanGlobalCandidates(partitionItemsSets));
+		computeSupport(globalCandidates);
     }
 
 	public ArrayList<String> getFileLines() {
@@ -396,20 +420,22 @@ import java.util.StringTokenizer;
 	}
     
     public void mergePartitions(ArrayList<ArrayList<ItemSet>> partitionItemsSets){
-    	ArrayList<ItemSet> firstPartition = partitionItemsSets.get(0);
-    		for(int j=0; j<partitionItemsSets.size()-1; j++){
+    	ArrayList<ItemSet> result = new ArrayList<ItemSet>();
+    		for(int j = 0; j < partitionItemsSets.size(); j++){
     			ArrayList<ItemSet> currentPartition = partitionItemsSets.get(j);
-    			checkElements(firstPartition, currentPartition);
     		}
-    	
     }
     
-    public void checkElements(ArrayList<ItemSet> firstPartition, ArrayList<ItemSet> nPartition){
-    	for(int i=0; i<nPartition.size(); i++){
-			if (firstPartition.contains(nPartition.get(i))){
-				firstPartition.indexOf(nPartition.get(i))
-			}
-		}
+    public ArrayList<ItemSet> cleanGlobalCandidates(ArrayList<ItemSet> itemsets){
+    	for(int i = 0; i < itemsets.size(); i++){
+    		ItemSet is = itemsets.get(i);    		
+    		for(int j = i+1; j < itemsets.size(); j++){
+    			ItemSet is1 = itemsets.get(j);
+    			if(is.toString().equals(is1.toString()))
+    				itemsets.remove(j);
+    		}
+    	}
+    	return itemsets;
     }
     
 }
