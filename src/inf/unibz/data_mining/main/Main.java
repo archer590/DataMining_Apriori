@@ -16,7 +16,7 @@ public class Main {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException{
 		int choice = 0;
-		System.out.println("APRIORI ALGORITHM");
+		System.out.println("********* APRIORI ALGORITHM *********");
 		System.out.println("Choose wihch algorithm do you want to run:");
 		System.out.println("1. Apriori (pure version);");
 		System.out.println("2. Apriori with database partitioning (optimized).");
@@ -24,7 +24,6 @@ public class Main {
 		Scanner s = new Scanner(System.in);
 		choice = s.nextInt();		
 		if(choice == 1){			
-			System.out.println("APRIORI ALGORITHM");
 			System.out.println("###############################################");
 			System.out.println("######### FREQUENT PATTERN GENERATION #########");
 			System.out.println("###############################################\n");
@@ -50,29 +49,23 @@ public class Main {
 			System.out.println();
 			System.out.println("Done.");
 		} else if (choice == 2) {
-			System.out.println("APRIORI ALGORITHM WITH DATABASE PARTITIONING");
 			System.out.println("###############################################");
 			System.out.println("######### FREQUENT PATTERN GENERATION #########");
+			System.out.println("##### PARTITIONING DATABASE OPTIMIZATION ######");
 			System.out.println("###############################################\n");
 			System.out.print("Cleaning data... ");
 			cleanData("./bank.csv", "./bank_marketing.arff");
 			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 			System.out.println("Done.");
-			Apriori ap = new Apriori(args[0], Integer.parseInt(args[2]));
+			Apriori ap = new Apriori(args[0], Integer.parseInt(args[1]));
 //			System.out.print("Scanning data file \"bank_marketing.arff\"... ");
-			ap.partitioningDB();
-			System.out.println("Done.");
-			System.out.print("Generating items... ");
-//			ap.getItems(ap.getFileLines());
-			System.out.println("Done.");
-			System.out.print("Generated items: ");
-			System.out.println(ap.getMappingTable());
+			System.out.print("Database to partition: "+args[0]+"\nMinimum support: "+args[1]);
 			System.out.println();
-			System.out.println("**************************************************************************************************");
-			System.out.println("##### K-ITEMSETS GENERATION #####\n");
-//			ap.generateKItemset();
 			System.out.println();
-			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(new ArrayList<ItemSet>()));
+			ArrayList<ItemSet> frequentPatterns = new ArrayList<ItemSet>();
+			frequentPatterns.addAll(ap.partitioningDB());			
+			System.out.println();
+			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(frequentPatterns));
 			System.out.println();
 			System.out.println("Done.");
 		}

@@ -2,11 +2,13 @@ package inf.unibz.data_mining.apriori;
 	
 import inf.unibz.data_mining.components.Item;
 import inf.unibz.data_mining.components.ItemSet;
+import inf.unibz.data_mining.components.Partition;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -358,8 +360,9 @@ import java.util.StringTokenizer;
     }
     
     @SuppressWarnings("resource")
-	public void partitioningDB() throws IOException{
-    	System.out.print("\nHow many transactions per partitions?   ");
+	public ArrayList<ItemSet> partitioningDB() throws IOException{
+    	System.out.println("###### SETTING NUMBER PARTITIONS ######");
+    	System.out.print("\nHow many transactions per partitions? ");
     	Scanner s = new Scanner(System.in);
     	int linesPerPartition = s.nextInt();
     	int numberOfTransitions = 0;
@@ -377,38 +380,98 @@ import java.util.StringTokenizer;
 			currentLine = br.readLine();
 		}
 		
+		int j=0, i=0;
 		numberOfTransitions = fileLines.size();
 		partitions = new ArrayList<ArrayList<String>>();
-		ArrayList<String> tmp = null;
-		for(double j = 0.0; j < numberOfTransitions; j++){		
-			if(j+1d % linesPerPartition == 0.0 || j == 0.0)
-				tmp = new ArrayList<String>();	
-			tmp.add(fileLines.get(( (int) j)));
-			partitions.add(tmp);
-		}
+		ArrayList<String> tmp = new ArrayList<String>();
+		
+//		System.out.println("numberOfTransitions: "+numberOfTransitions);
+		
+		do {				
+				tmp.add(fileLines.get(j));				
+				if (i==linesPerPartition || j == numberOfTransitions-1){	
+					i=0;
+					partitions.add(tmp);
+					tmp = new ArrayList<String>();	
+//					System.out.println("partitions.size(): "+partitions.size());
+				}
+				j++;
+				i++;
+		} while (j < numberOfTransitions);
 		br.close();
 		
-		ArrayList<ItemSet> partitionItemsSets = new ArrayList<ItemSet>();		
+		System.out.println();
+		System.out.print("Partitions created: "+partitions.size());
+		System.out.println();
 		
-//		getItems(fileLines, mappingTable);
+		ArrayList<ItemSet> partitionItemsSets = new ArrayList<ItemSet>();		
+
+		System.out.println();
+		System.out.println("###### FIRST SCAN: CREATING LOCAL FREQUENT PATTERNS ######");
+		System.out.println();
+		
+		ArrayList<Partition> allPartitions = new ArrayList<Partition>();
 		
 		for(int h=0; h<partitions.size();h++){
 			ArrayList<String> currentPartition = partitions.get(h);
-			
+			HashMap<Integer, Item> currentMappingTable = new HashMap<Integer, Item>();
+			getItems(currentPartition, currentMappingTable);
+			Partition p = new Partition(currentMappingTable, currentPartition);
+			allPartitions.add(p);
+		}
+		
+		
+		System.out.println();
+		System.out.println("###### CREATION OF A THREAD FOR EACH PARTITION ######");
+		System.out.println();
+		
+		
+		for(int h=0; h<allPartitions.size();h++){
+			Partition currentPartition = allPartitions.get(h);
+			HashMap<Integer, Item> currentMappingTable = currentPartition.getMappingTable();
 			Thread t = new Thread(new Runnable() {
 				
 				@Override
-				public void run() {
-					HashMap<Integer, Item> currentMappingTable = new HashMap<Integer, Item>();
-					getItems(currentPartition, currentMappingTable);					
+				public void run() {									
 					partitionItemsSets.addAll(generateKItemset(currentMappingTable));
 				}
 			});
+			
+			System.out.println();
+			System.out.print(t.getName()+"...");
+			
 			t.start();
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			System.out.println("started");
+			System.out.println();
 		}
+		
+		System.out.println();
+		System.out.println("Local frequen patterns founded.\nThey will be the global candidates for the entire database.");
+		System.out.println();
+		
 		ArrayList<ItemSet> globalCandidates = new ArrayList<ItemSet>();
 		globalCandidates.addAll(cleanGlobalCandidates(partitionItemsSets));
-		computeSupport(globalCandidates);
+		
+		System.out.println();
+		System.out.println("###### SECOND SCAN: CREATING GLOBAL FREQUENT PATTERNS ######");
+		System.out.println();
+		
+		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates);
+		ArrayList<ItemSet> globalFrequentPattern = new ArrayList<ItemSet>();
+		globalFrequentPattern.addAll(checkCandidateSupport(toCheck));
+		
+		System.out.println();
+		System.out.println("Global frequen patterns founded.");
+		System.out.println();
+		
+		return globalFrequentPattern;
     }
 
 	public ArrayList<String> getFileLines() {
