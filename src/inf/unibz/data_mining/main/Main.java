@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 
 public class Main {
@@ -16,6 +18,8 @@ public class Main {
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException{
 		int choice = 0;
+		long startTime = 0, endTime = 0, duration = 0;
+
 		System.out.println("********* APRIORI ALGORITHM *********");
 		System.out.println("Choose wihch algorithm do you want to run:");
 		System.out.println("1. Apriori (pure version);");
@@ -23,7 +27,8 @@ public class Main {
 		System.out.print("Choice: ");
 		Scanner s = new Scanner(System.in);
 		choice = s.nextInt();		
-		if(choice == 1){			
+		if(choice == 1){
+			
 			System.out.println("###############################################");
 			System.out.println("######### FREQUENT PATTERN GENERATION #########");
 			System.out.println("###############################################\n");
@@ -43,12 +48,16 @@ public class Main {
 			System.out.println();
 			System.out.println("**************************************************************************************************");
 			System.out.println("##### K-ITEMSETS GENERATION #####\n");
+			startTime = System.currentTimeMillis();
 			ArrayList<ItemSet> aux = ap.generateKItemset(ap.getMappingTable());
+			endTime = System.currentTimeMillis();
 			System.out.println();
 			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(aux));
 			System.out.println();
 			System.out.println("Done.");
+			
 		} else if (choice == 2) {
+			
 			System.out.println("###############################################");
 			System.out.println("######### FREQUENT PATTERN GENERATION #########");
 			System.out.println("##### PARTITIONING DATABASE OPTIMIZATION ######");
@@ -63,12 +72,20 @@ public class Main {
 			System.out.println();
 			System.out.println();
 			ArrayList<ItemSet> frequentPatterns = new ArrayList<ItemSet>();
-			frequentPatterns.addAll(ap.partitioningDB());			
+			frequentPatterns.addAll(ap.partitioningDB(Integer.parseInt(args[2])));			
 			System.out.println();
 			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(frequentPatterns));
 			System.out.println();
 			System.out.println("Done.");
-		}
+			
+		}	
+
+		duration = endTime - startTime;
+		System.out.println();
+		System.out.println("\nStart Time: " + new SimpleDateFormat("HH:mm:ss").format(new Date(startTime)));
+		System.out.println("End Time: " + new SimpleDateFormat("HH:mm:ss").format(new Date(endTime)));
+		System.out.println("\nELAPSED TIME: " + new SimpleDateFormat("HH:mm:ss").format(new Date(duration)));
+		//System.out.println("ELAPSED TIME: "+getElapsedTimeHoursMinutesFromMilliseconds(duration));
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{
@@ -114,4 +131,5 @@ public class Main {
 		br.close();
 		
 	}
+	
 }

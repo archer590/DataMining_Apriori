@@ -9,10 +9,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -106,9 +108,11 @@ import java.util.StringTokenizer;
 					
 					//System.out.println("Current item: " + currentItem.toString());
 					if(!contains(mappingTable.values(), currentItem)){
-						mappingTable.put(keyGenerator, currentItem);
+						mappingTable.put(this.mappingTable.size(), currentItem);
 						if(!contains(this.mappingTable.values(), currentItem))
-							this.mappingTable.put(keyGenerator, currentItem);
+							this.mappingTable.put(mappingTable.size()+1, currentItem);
+						else
+							
 						keyGenerator++;
 					}
 				}
@@ -123,7 +127,7 @@ import java.util.StringTokenizer;
 		System.out.println("GENERATING ITEMSETS OF SIZE 1...");
 		candidates = populateFirstKItemSets(mappingTable);
 		System.out.println("Performing pruning: NOT NECCESSARY FOR k = 1");
-		itemsets.addAll(computeSupport(candidates));
+		itemsets.addAll(computeSupport(candidates, mappingTable));
 		System.out.println("Itemsets for k = 1: "+ itemsets);
 		System.out.println("Support:");
 		itemsets = checkCandidateSupport(itemsets);
@@ -137,7 +141,7 @@ import java.util.StringTokenizer;
 				System.out.println("Perorming pruning:");
 				candGen = pruning(k, candidates, itemsets);
 				System.out.println("Pruned: " + candGen);
-				candGen = computeSupport(candGen);
+				candGen = computeSupport(candGen, mappingTable);
 				System.out.println("Computed support: " + candGen);
 				System.out.println("Support:");
 				candGen = checkCandidateSupport(candGen);
@@ -184,7 +188,7 @@ import java.util.StringTokenizer;
 	}
 	
 	
-	public ArrayList<ItemSet> computeSupport(ArrayList<ItemSet> itemsets) {
+	public ArrayList<ItemSet> computeSupport(ArrayList<ItemSet> itemsets, HashMap<Integer, Item> mappingTable) {
 		ArrayList<ItemSet> result = new ArrayList<ItemSet>();
 		for (ItemSet is : itemsets) {
 			ArrayList<Integer> isItems = is.getItems();
@@ -193,7 +197,12 @@ import java.util.StringTokenizer;
 				boolean isPresent = false;
 				for (int i = 0; i < isItems.size(); i++) {
 					Item it = mappingTable.get(isItems.get(i));
-					if (splitted[it.getAttributeOrder()].equals((String) it.getAttributeValue()))
+					if(it == null)
+						System.out.println("IS NULL, CAZZO!!!");
+					int index = it.getAttributeOrder();
+					String aux = splitted[index];
+					if (aux
+							.equals((String) it.getAttributeValue()))
 						isPresent = true;
 					else {
 						isPresent = false;
@@ -360,12 +369,9 @@ import java.util.StringTokenizer;
     }
     
     @SuppressWarnings("resource")
-	public ArrayList<ItemSet> partitioningDB() throws IOException{
+	public ArrayList<ItemSet> partitioningDB(int linesPerPartition) throws IOException{
     	System.out.println("###### SETTING NUMBER PARTITIONS ######");
-    	System.out.print("\nHow many transactions per partitions? ");
-    	Scanner s = new Scanner(System.in);
-    	int linesPerPartition = s.nextInt();
-    	int numberOfTransitions = 0;
+    	int numberOfTransactions = 0;
     	String currentLine = br.readLine();
 		while (currentLine != null) {
 			if (currentLine.equals("@DATA")) {
@@ -381,7 +387,7 @@ import java.util.StringTokenizer;
 		}
 		
 		int j=0, i=0;
-		numberOfTransitions = fileLines.size();
+		numberOfTransactions = fileLines.size();
 		partitions = new ArrayList<ArrayList<String>>();
 		ArrayList<String> tmp = new ArrayList<String>();
 		
@@ -389,15 +395,15 @@ import java.util.StringTokenizer;
 		
 		do {				
 				tmp.add(fileLines.get(j));				
-				if (i==linesPerPartition || j == numberOfTransitions-1){	
-					i=0;
+				if (i == linesPerPartition - 1){	
+					i = 0;
 					partitions.add(tmp);
 					tmp = new ArrayList<String>();	
 //					System.out.println("partitions.size(): "+partitions.size());
 				}
 				j++;
 				i++;
-		} while (j < numberOfTransitions);
+		} while (j < numberOfTransactions);
 		br.close();
 		
 		System.out.println();
@@ -425,8 +431,9 @@ import java.util.StringTokenizer;
 		System.out.println("###### CREATION OF A THREAD FOR EACH PARTITION ######");
 		System.out.println();
 		
-		
-		for(int h=0; h<allPartitions.size();h++){
+		ArrayList<Thread> threads = new ArrayList<Thread>();
+		long start = System.currentTimeMillis();
+		for(int h = 0; h < allPartitions.size(); h++){
 			Partition currentPartition = allPartitions.get(h);
 			HashMap<Integer, Item> currentMappingTable = currentPartition.getMappingTable();
 			Thread t = new Thread(new Runnable() {
@@ -437,19 +444,24 @@ import java.util.StringTokenizer;
 				}
 			});
 			
+			threads.add(t);
+			
 			System.out.println();
 			System.out.print(t.getName()+"...");
 			
 			t.start();
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
 			
 			System.out.println("started");
 			System.out.println();
+		}
+		
+		for (Thread th : threads){
+			try {
+				th.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		System.out.println();
@@ -458,12 +470,13 @@ import java.util.StringTokenizer;
 		
 		ArrayList<ItemSet> globalCandidates = new ArrayList<ItemSet>();
 		globalCandidates.addAll(cleanGlobalCandidates(partitionItemsSets));
+		System.out.println("Time needed: " + new SimpleDateFormat("mm:ss").format(new Date((System.currentTimeMillis() - start))));
 		
 		System.out.println();
 		System.out.println("###### SECOND SCAN: CREATING GLOBAL FREQUENT PATTERNS ######");
 		System.out.println();
 		
-		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates);
+		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates, mappingTable);
 		ArrayList<ItemSet> globalFrequentPattern = new ArrayList<ItemSet>();
 		globalFrequentPattern.addAll(checkCandidateSupport(toCheck));
 		
@@ -481,13 +494,6 @@ import java.util.StringTokenizer;
 	public void setFileLines(ArrayList<String> fileLines) {
 		this.fileLines = fileLines;
 	}
-    
-    public void mergePartitions(ArrayList<ArrayList<ItemSet>> partitionItemsSets){
-    	ArrayList<ItemSet> result = new ArrayList<ItemSet>();
-    		for(int j = 0; j < partitionItemsSets.size(); j++){
-    			ArrayList<ItemSet> currentPartition = partitionItemsSets.get(j);
-    		}
-    }
     
     public ArrayList<ItemSet> cleanGlobalCandidates(ArrayList<ItemSet> itemsets){
     	for(int i = 0; i < itemsets.size(); i++){
