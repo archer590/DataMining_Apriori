@@ -80,7 +80,7 @@ import java.util.StringTokenizer;
 					currentItem.setAttributeOrder(i);
 					
 					//System.out.println("Current item: " + currentItem.toString());
-					if(!contains(mappingTable.values(), currentItem)){
+					if(contains(mappingTable.values(), currentItem)==null){
 						mappingTable.put(keyGenerator, currentItem);
 						keyGenerator++;
 					}
@@ -92,7 +92,7 @@ import java.util.StringTokenizer;
 	
 	public Collection<Item> getItems(ArrayList<String> currentFileLines, HashMap<Integer, Item> mappingTable) {
 		StringTokenizer st = null;
-		Item currentItem = null;
+		Item currentItem = null, itemContained = null;
 		int keyGenerator = 0;
 		for (int j = 0; j < currentFileLines.size(); j++) {
 			st = new StringTokenizer(currentFileLines.get(j), ",");
@@ -107,14 +107,19 @@ import java.util.StringTokenizer;
 					currentItem.setAttributeOrder(i);
 					
 					//System.out.println("Current item: " + currentItem.toString());
-					if(!contains(mappingTable.values(), currentItem)){
-						mappingTable.put(this.mappingTable.size(), currentItem);
-						if(!contains(this.mappingTable.values(), currentItem))
-							this.mappingTable.put(mappingTable.size()+1, currentItem);
-						else
-							
+//					if(contains(mappingTable.values(), currentItem) == null){
+//						mappingTable.put(this.mappingTable.size(), currentItem);
+						if (contains(this.mappingTable.values(), currentItem) == null && contains(mappingTable.values(), currentItem) == null){
+							this.mappingTable.put(keyGenerator, currentItem);
+							mappingTable.put(keyGenerator, currentItem);
+							keyGenerator++;
+						}
+						else if (contains(this.mappingTable.values(), currentItem) != null){
+							itemContained = contains(this.mappingTable.values(), currentItem);							
+							mappingTable.put(itemContained.getKeyValue(), currentItem);
+						}
 						keyGenerator++;
-					}
+//					}
 				}
 			}
 		}
@@ -263,7 +268,7 @@ import java.util.StringTokenizer;
 			return toReturn;
 	}
 	
-	public boolean contains(Collection<Item> items, Item i){
+	public Item contains(Collection<Item> items, Item i){
 		Comparator<Item> c = new Comparator<Item>() {
 			
 			@Override
@@ -275,8 +280,8 @@ import java.util.StringTokenizer;
 		};
 		for(Item o : items)
 			if(c.compare(o, i) == 0)
-				return true;
-		return false;
+				return o;
+		return null;
 	}
 	
 	public boolean contains(ArrayList<ItemSet> iS1, ItemSet is){
@@ -424,6 +429,10 @@ import java.util.StringTokenizer;
 			getItems(currentPartition, currentMappingTable);
 			Partition p = new Partition(currentMappingTable, currentPartition);
 			allPartitions.add(p);
+			
+//			System.out.println("GlobalMT: "+this.mappingTable);
+//			System.out.println("CurrentMT: "+currentMappingTable);
+			
 		}
 		
 		

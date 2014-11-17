@@ -5,6 +5,7 @@ public class Item {
 	String attributeName = null;
 	Object attributeValue = null;
 	int attributeOrder;
+	int keyValue = 0;
 	
 	
 	public int getAttributeOrder() {
@@ -45,6 +46,14 @@ public class Item {
 		if(this.getAttributeName().equals(t.getAttributeName()) && this.getAttributeValue().equals(t.getAttributeValue()))
 			return true;
 		return false;
+	}
+
+	public int getKeyValue() {
+		return keyValue;
+	}
+
+	public void setKeyValue(int keyValue) {
+		this.keyValue = keyValue;
 	}
 
 }
