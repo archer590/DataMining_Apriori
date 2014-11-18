@@ -48,8 +48,21 @@ public class Main {
 			System.out.println();
 			System.out.println("**************************************************************************************************");
 			System.out.println("##### K-ITEMSETS GENERATION #####\n");
+			ArrayList<ItemSet> aux = new ArrayList<ItemSet>();
 			startTime = System.currentTimeMillis();
-			ArrayList<ItemSet> aux = ap.generateKItemset(ap.getMappingTable());
+			Thread t = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					aux.addAll(ap.generateKItemset(ap.getMappingTable()));
+				}
+			});
+			t.start();
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			endTime = System.currentTimeMillis();
 			System.out.println();
 			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(aux));

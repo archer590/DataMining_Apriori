@@ -5,7 +5,8 @@ public class Item {
 	String attributeName = null;
 	Object attributeValue = null;
 	int attributeOrder;
-	int keyValue = 0;
+	int keyValue
+	;
 	
 	
 	public int getAttributeOrder() {

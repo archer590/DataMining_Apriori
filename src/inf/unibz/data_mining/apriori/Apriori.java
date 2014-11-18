@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +15,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.StringTokenizer;
 	
 	public class Apriori {
@@ -30,6 +28,7 @@ import java.util.StringTokenizer;
 	ArrayList<ArrayList<String>> partitions;
 	BufferedReader br;
 	HashMap<Integer, Item> mappingTable;
+	int keyGenerator = 0;
 	
 	
 	public Apriori(String file, int minSup) {
@@ -66,7 +65,6 @@ import java.util.StringTokenizer;
 	public Collection<Item> getItems(ArrayList<String> currentFileLines) {
 		StringTokenizer st = null;
 		Item currentItem = null;
-		int keyGenerator = 0;
 		for (int j = 0; j < currentFileLines.size(); j++) {
 			st = new StringTokenizer(currentFileLines.get(j), ",");
 			//System.out.println("# of tokens: " + st.countTokens());
@@ -93,7 +91,6 @@ import java.util.StringTokenizer;
 	public Collection<Item> getItems(ArrayList<String> currentFileLines, HashMap<Integer, Item> mappingTable) {
 		StringTokenizer st = null;
 		Item currentItem = null, itemContained = null;
-		int keyGenerator = 0;
 		for (int j = 0; j < currentFileLines.size(); j++) {
 			st = new StringTokenizer(currentFileLines.get(j), ",");
 			//System.out.println("# of tokens: " + st.countTokens());
@@ -109,7 +106,8 @@ import java.util.StringTokenizer;
 					//System.out.println("Current item: " + currentItem.toString());
 //					if(contains(mappingTable.values(), currentItem) == null){
 //						mappingTable.put(this.mappingTable.size(), currentItem);
-						if (contains(this.mappingTable.values(), currentItem) == null && contains(mappingTable.values(), currentItem) == null){
+						if (contains(this.mappingTable.values(), currentItem) == null){
+							currentItem.setKeyValue(keyGenerator);
 							this.mappingTable.put(keyGenerator, currentItem);
 							mappingTable.put(keyGenerator, currentItem);
 							keyGenerator++;
@@ -118,7 +116,6 @@ import java.util.StringTokenizer;
 							itemContained = contains(this.mappingTable.values(), currentItem);							
 							mappingTable.put(itemContained.getKeyValue(), currentItem);
 						}
-						keyGenerator++;
 //					}
 				}
 			}
@@ -197,6 +194,7 @@ import java.util.StringTokenizer;
 		ArrayList<ItemSet> result = new ArrayList<ItemSet>();
 		for (ItemSet is : itemsets) {
 			ArrayList<Integer> isItems = is.getItems();
+			is.setItemSupport(0);
 			for (String s : fileLines) {
 				String[] splitted = s.split(",");
 				boolean isPresent = false;
@@ -206,8 +204,7 @@ import java.util.StringTokenizer;
 						System.out.println("IS NULL, CAZZO!!!");
 					int index = it.getAttributeOrder();
 					String aux = splitted[index];
-					if (aux
-							.equals((String) it.getAttributeValue()))
+					if (aux.equals((String) it.getAttributeValue()))
 						isPresent = true;
 					else {
 						isPresent = false;
@@ -391,16 +388,19 @@ import java.util.StringTokenizer;
 			currentLine = br.readLine();
 		}
 		
+		
+		long startTime = System.currentTimeMillis();
 		int j=0, i=0;
 		numberOfTransactions = fileLines.size();
 		partitions = new ArrayList<ArrayList<String>>();
 		ArrayList<String> tmp = new ArrayList<String>();
 		
+		
 //		System.out.println("numberOfTransitions: "+numberOfTransitions);
 		
 		do {				
 				tmp.add(fileLines.get(j));				
-				if (i == linesPerPartition - 1){	
+				if (i == linesPerPartition - 1 ||  j == (numberOfTransactions - 1)){	
 					i = 0;
 					partitions.add(tmp);
 					tmp = new ArrayList<String>();	
@@ -410,20 +410,23 @@ import java.util.StringTokenizer;
 				i++;
 		} while (j < numberOfTransactions);
 		br.close();
+		long endTime = System.currentTimeMillis();
+		long duration = endTime - startTime;
+		System.out.println("\nELAPSED TIME PARTITIONING: " + new SimpleDateFormat("mm:ss").format(new Date(duration)));
 		
-		System.out.println();
-		System.out.print("Partitions created: "+partitions.size());
-		System.out.println();
+//		System.out.println();
+//		System.out.print("Partitions created: "+partitions.size());
+//		System.out.println();
 		
 		ArrayList<ItemSet> partitionItemsSets = new ArrayList<ItemSet>();		
 
-		System.out.println();
-		System.out.println("###### FIRST SCAN: CREATING LOCAL FREQUENT PATTERNS ######");
-		System.out.println();
+//		System.out.println();
+//		System.out.println("###### FIRST SCAN: CREATING LOCAL FREQUENT PATTERNS ######");
+//		System.out.println();
 		
 		ArrayList<Partition> allPartitions = new ArrayList<Partition>();
 		
-		for(int h=0; h<partitions.size();h++){
+		for(int h = 0; h < partitions.size(); h++){
 			ArrayList<String> currentPartition = partitions.get(h);
 			HashMap<Integer, Item> currentMappingTable = new HashMap<Integer, Item>();
 			getItems(currentPartition, currentMappingTable);
@@ -436,33 +439,33 @@ import java.util.StringTokenizer;
 		}
 		
 		
-		System.out.println();
-		System.out.println("###### CREATION OF A THREAD FOR EACH PARTITION ######");
-		System.out.println();
+//		System.out.println();
+//		System.out.println("###### CREATION OF A THREAD FOR EACH PARTITION ######");
+//		System.out.println();
 		
 		ArrayList<Thread> threads = new ArrayList<Thread>();
-		long start = System.currentTimeMillis();
+		
 		for(int h = 0; h < allPartitions.size(); h++){
 			Partition currentPartition = allPartitions.get(h);
 			HashMap<Integer, Item> currentMappingTable = currentPartition.getMappingTable();
 			Thread t = new Thread(new Runnable() {
 				
 				@Override
-				public void run() {									
+				public void run() {		
 					partitionItemsSets.addAll(generateKItemset(currentMappingTable));
 				}
 			});
 			
 			threads.add(t);
 			
-			System.out.println();
-			System.out.print(t.getName()+"...");
+//			System.out.println();
+//			System.out.print(t.getName()+"...");
 			
 			t.start();
 			
 			
-			System.out.println("started");
-			System.out.println();
+//			System.out.println("started");
+//			System.out.println();
 		}
 		
 		for (Thread th : threads){
@@ -473,25 +476,27 @@ import java.util.StringTokenizer;
 			}
 		}
 		
-		System.out.println();
-		System.out.println("Local frequen patterns founded.\nThey will be the global candidates for the entire database.");
-		System.out.println();
+//		System.out.println();
+//		System.out.println("Local frequen patterns founded.\nThey will be the global candidates for the entire database.");
+//		System.out.println();
 		
 		ArrayList<ItemSet> globalCandidates = new ArrayList<ItemSet>();
 		globalCandidates.addAll(cleanGlobalCandidates(partitionItemsSets));
-		System.out.println("Time needed: " + new SimpleDateFormat("mm:ss").format(new Date((System.currentTimeMillis() - start))));
 		
-		System.out.println();
-		System.out.println("###### SECOND SCAN: CREATING GLOBAL FREQUENT PATTERNS ######");
-		System.out.println();
+		
+//		System.out.println();
+//		System.out.println("###### SECOND SCAN: CREATING GLOBAL FREQUENT PATTERNS ######");
+//		System.out.println();
 		
 		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates, mappingTable);
 		ArrayList<ItemSet> globalFrequentPattern = new ArrayList<ItemSet>();
 		globalFrequentPattern.addAll(checkCandidateSupport(toCheck));
 		
-		System.out.println();
-		System.out.println("Global frequen patterns founded.");
-		System.out.println();
+		System.out.println("\nTime needed: " + new SimpleDateFormat("mm:ss").format(new Date((System.currentTimeMillis() - startTime))));
+		
+//		System.out.println();
+//		System.out.println("Global frequen patterns founded.");
+//		System.out.println();
 		
 		return globalFrequentPattern;
     }
