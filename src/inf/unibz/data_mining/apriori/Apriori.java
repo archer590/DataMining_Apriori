@@ -1,5 +1,6 @@
 package inf.unibz.data_mining.apriori;
 	
+import inf.unibz.data_mining.components.AssociationRule;
 import inf.unibz.data_mining.components.Item;
 import inf.unibz.data_mining.components.ItemSet;
 import inf.unibz.data_mining.components.Partition;
@@ -65,6 +66,7 @@ import java.util.StringTokenizer;
 	public Collection<Item> getItems(ArrayList<String> currentFileLines) {
 		StringTokenizer st = null;
 		Item currentItem = null;
+		keyGenerator = 0;
 		for (int j = 0; j < currentFileLines.size(); j++) {
 			st = new StringTokenizer(currentFileLines.get(j), ",");
 			//System.out.println("# of tokens: " + st.countTokens());
@@ -289,6 +291,15 @@ import java.util.StringTokenizer;
 		return false;
 	}
 	
+	public boolean contains(ItemSet iS1, ItemSet is){
+		for(Integer i: iS1.getItems())
+			for(Integer j: is.getItems())
+				if(i == j)
+					return true;
+		return false;
+	}
+	
+	
 	public ArrayList<String> toArrayList(String s){
 		ArrayList<String> finalArray = new ArrayList<String>();
 		String[] tmp = s.split("");
@@ -331,7 +342,6 @@ import java.util.StringTokenizer;
     private void comb1(String s, String prefix, int k, ArrayList<String> combinations) {
         if (s.length() < k) return;
         else if (k == 0){ 
-//        	System.out.println(prefix); 
         	combinations.add(prefix);
         	
         }
@@ -396,34 +406,19 @@ import java.util.StringTokenizer;
 		partitions = new ArrayList<ArrayList<String>>();
 		ArrayList<String> tmp = new ArrayList<String>();
 		
-		
-//		System.out.println("numberOfTransitions: "+numberOfTransitions);
-		
 		do {				
 				tmp.add(fileLines.get(j));				
 				if (i == linesPerPartition - 1 ||  j == (numberOfTransactions - 1)){	
 					i = 0;
 					partitions.add(tmp);
 					tmp = new ArrayList<String>();	
-//					System.out.println("partitions.size(): "+partitions.size());
 				}
 				j++;
 				i++;
 		} while (j < numberOfTransactions);
 		br.close();
-//		long endTime = System.currentTimeMillis();
-//		long duration = endTime - startTime;
-//		System.out.println("\nELAPSED TIME PARTITIONING: " + new SimpleDateFormat("mm:ss").format(new Date(duration)));
-		
-//		System.out.println();
-//		System.out.print("Partitions created: "+partitions.size());
-//		System.out.println();
 		
 		ArrayList<ItemSet> partitionItemsSets = new ArrayList<ItemSet>();		
-
-//		System.out.println();
-//		System.out.println("###### FIRST SCAN: CREATING LOCAL FREQUENT PATTERNS ######");
-//		System.out.println();
 		
 		ArrayList<Partition> allPartitions = new ArrayList<Partition>();
 		
@@ -434,15 +429,7 @@ import java.util.StringTokenizer;
 			Partition p = new Partition(currentMappingTable, currentPartition);
 			allPartitions.add(p);
 			
-//			System.out.println("GlobalMT: "+this.mappingTable);
-//			System.out.println("CurrentMT: "+currentMappingTable);
-			
 		}
-		
-		
-//		System.out.println();
-//		System.out.println("###### CREATION OF A THREAD FOR EACH PARTITION ######");
-//		System.out.println();
 		
 		ArrayList<Thread> threads = new ArrayList<Thread>();
 		
@@ -459,14 +446,7 @@ import java.util.StringTokenizer;
 			
 			threads.add(t);
 			
-//			System.out.println();
-//			System.out.print(t.getName()+"...");
-			
 			t.start();
-			
-			
-//			System.out.println("started");
-//			System.out.println();
 		}
 		
 		for (Thread th : threads){
@@ -477,27 +457,14 @@ import java.util.StringTokenizer;
 			}
 		}
 		
-//		System.out.println();
-//		System.out.println("Local frequen patterns founded.\nThey will be the global candidates for the entire database.");
-//		System.out.println();
-		
 		ArrayList<ItemSet> globalCandidates = new ArrayList<ItemSet>();
 		globalCandidates.addAll(cleanGlobalCandidates(partitionItemsSets));
-		
-		
-//		System.out.println();
-//		System.out.println("###### SECOND SCAN: CREATING GLOBAL FREQUENT PATTERNS ######");
-//		System.out.println();
 		
 		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates, mappingTable, fileLines);
 		ArrayList<ItemSet> globalFrequentPattern = new ArrayList<ItemSet>();
 		globalFrequentPattern.addAll(checkCandidateSupport(toCheck, minSup*allPartitions.size()));
 		
 		System.out.println("\nTime needed: " + new SimpleDateFormat("mm:ss").format(new Date((System.currentTimeMillis() - startTime))));
-		
-//		System.out.println();
-//		System.out.println("Global frequen patterns founded.");
-//		System.out.println();
 		
 		return globalFrequentPattern;
     }
@@ -521,5 +488,77 @@ import java.util.StringTokenizer;
     	}
     	return itemsets;
     }
+    
+    public ArrayList<AssociationRule> generateAssociationRules(ArrayList<ItemSet> itemsets, int confidence){
+    	ArrayList<AssociationRule> result = new ArrayList<AssociationRule>();
+    	for(int i = 0; i < itemsets.size(); i++){
+    		ItemSet is = itemsets.get(i);
+    		for(int j = i +1; j < itemsets.size(); j++){
+    			if(!contains(is, itemsets.get(j)) && !contains(itemsets.get(j), is)){
+	    			AssociationRule ar = new AssociationRule(is, itemsets.get(j), is.getItemSupport(), computeSubsetSupport(is, itemsets.get(j), mappingTable, fileLines));
+	    			if(ar.getConfidence() >= confidence)
+	    				result.add(ar);
+    			}
+    		}
+    	}
+    	return result;
+    }
+    
+    public int computeSubsetSupport(ItemSet itemset, ItemSet subset, HashMap<Integer, Item> mappingTable,  ArrayList<String> partitionLines) {
+		int subsetSupport = 0;
+		for (String s : partitionLines) {
+			String[] splitted = s.split(",");
+			boolean isPresent = false;
+			for (int i = 0; i < itemset.getItems().size(); i++) {
+				Item it = mappingTable.get( itemset.getItems().get(i));
+				int index = it.getAttributeOrder();
+				String aux = splitted[index];
+				if (aux.equals((String) it.getAttributeValue()))
+					isPresent = true;
+				else {
+					isPresent = false;
+					break;
+				}
+			}
+			if(isPresent){
+				for (int i = 0; i < subset.getItems().size(); i++) {
+					Item it = mappingTable.get(subset.getItems().get(i));
+					int index = it.getAttributeOrder();
+					String aux = splitted[index];
+					if (aux.equals((String) it.getAttributeValue()))
+						isPresent = true;
+					else {
+						isPresent = false;
+						break;
+					}
+				}
+				if(isPresent)
+					subsetSupport++;
+			}
+		}
+		
+		return subsetSupport;
+	}
+    
+    
+//    public ArrayList<ItemSet> extractMaxItemsets(ArrayList<ItemSet> itemsets){
+//    	ArrayList<ItemSet> result = new ArrayList<ItemSet>();
+//    	ItemSet last = itemsets.get(itemsets.size() - 1);
+//    	int maxSize = last.getItems().size();
+//    	for(int i = itemsets.size() - 1; i >= 0; i--){
+//    		if(itemsets.get(i).getItems().size() == maxSize)
+//    			result.add(itemsets.get(i));
+//    	}
+//    	return result;
+//    }
+        
+//    public ArrayList<String> generateSubsets(ArrayList<ItemSet> maxItemSets){
+//    	ArrayList<String> result = new ArrayList<String>();
+//    	for(ItemSet is : maxItemSets){
+//    		for(int i = is.getItems().size() - 1; i > 0; i--)
+//    			result.addAll(comb1(is.toItemString(), i));
+//    	}
+//    	return result;
+//    }    
     
 }

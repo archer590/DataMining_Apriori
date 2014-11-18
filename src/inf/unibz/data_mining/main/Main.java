@@ -1,5 +1,6 @@
 package inf.unibz.data_mining.main;
 import inf.unibz.data_mining.apriori.Apriori;
+import inf.unibz.data_mining.components.AssociationRule;
 import inf.unibz.data_mining.components.ItemSet;
 
 import java.io.BufferedReader;
@@ -27,6 +28,8 @@ public class Main {
 		System.out.print("Choice: ");
 		Scanner s = new Scanner(System.in);
 		choice = s.nextInt();		
+		ArrayList<ItemSet> frequentPatterns = new ArrayList<ItemSet>();
+		Apriori ap = null;
 		if(choice == 1){
 			
 			System.out.println("###############################################");
@@ -36,38 +39,21 @@ public class Main {
 			cleanData("./bank.csv", "./bank_marketing.arff");
 			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 			System.out.println("Done.");
-			Apriori ap = new Apriori(args[0], Integer.parseInt(args[1]));
+			ap = new Apriori(args[0], Integer.parseInt(args[1]));
 //			System.out.print("Scanning data file \"bank_marketing_full.arff\"... ");
 			ap.scanData();
 			System.out.println("Done.");
 			System.out.print("Generating items... ");
-			ap.getItems(ap.getFileLines(), ap.getMappingTable());
+			ap.getItems(ap.getFileLines());
 			System.out.println("Done.");
 			System.out.print("Generated items: ");
 			System.out.println(ap.getMappingTable());
 			System.out.println();
 			System.out.println("**************************************************************************************************");
 			System.out.println("##### K-ITEMSETS GENERATION #####\n");
-			ArrayList<ItemSet> aux = new ArrayList<ItemSet>();
 			startTime = System.currentTimeMillis();
-			Thread t = new Thread(new Runnable() {
-				
-				@Override
-				public void run() {
-					aux.addAll(ap.generateKItemset(ap.getMappingTable(), ap.getFileLines(), Integer.parseInt(args[1])));
-				}
-			});
-			t.start();
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			frequentPatterns.addAll(ap.generateKItemset(ap.getMappingTable(), ap.getFileLines(), Integer.parseInt(args[1])));
 			endTime = System.currentTimeMillis();
-			System.out.println();
-			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(aux));
-			System.out.println();
-			System.out.println("Done.");
 			
 		} else if (choice == 2) {
 			
@@ -79,28 +65,33 @@ public class Main {
 			cleanData("./bank.csv", "./bank_marketing.arff");
 			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 			System.out.println("Done.");
-			Apriori ap = new Apriori(args[0], Integer.parseInt(args[1]));
+			ap = new Apriori(args[0], Integer.parseInt(args[1]));
 //			System.out.print("Scanning data file \"bank_marketing.arff\"... ");
 			System.out.print("Database to partition: "+args[0]+"\nMinimum support: "+args[1]);
 			System.out.println();
 			System.out.println();
-			ArrayList<ItemSet> frequentPatterns = new ArrayList<ItemSet>();
 			startTime = System.currentTimeMillis();
-			frequentPatterns.addAll(ap.partitioningDB(Integer.parseInt(args[2]), Integer.parseInt(args[1])));			
+			frequentPatterns.addAll(ap.partitioningDB(Integer.parseInt(args[2]), Integer.parseInt(args[1])));
 			endTime = System.currentTimeMillis();
-			System.out.println();
-			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(frequentPatterns));
-			System.out.println();
-			System.out.println("Done.");
-			
-		}	
+		}
+		
+		//reversing the mapping table to get the initial items
+		System.out.println();
+		System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(frequentPatterns));
+		System.out.println();
 
 		duration = endTime - startTime;
 		System.out.println();
-		System.out.println("\nStart Time: " + new SimpleDateFormat("HH:mm:ss").format(new Date(startTime)));
-		System.out.println("End Time: " + new SimpleDateFormat("HH:mm:ss").format(new Date(endTime)));
 		System.out.println("\nELAPSED TIME: " + new SimpleDateFormat("mm:ss").format(new Date(duration)));
-		//System.out.println("ELAPSED TIME: "+getElapsedTimeHoursMinutesFromMilliseconds(duration));
+		System.out.println();
+		System.out.println("GENERATING ASSOCIATION RULES");
+		System.out.println();
+		ArrayList<AssociationRule> arules = ap.generateAssociationRules(frequentPatterns, 90);
+		for(AssociationRule ar  : arules){
+			System.out.println(ar.toString() + ", Confidence: " + ar.getConfidence() + "%");
+		}
+		System.out.println();
+		System.out.println("Done.");
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{
