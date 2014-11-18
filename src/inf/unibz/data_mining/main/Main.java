@@ -54,7 +54,7 @@ public class Main {
 				
 				@Override
 				public void run() {
-					aux.addAll(ap.generateKItemset(ap.getMappingTable()));
+					aux.addAll(ap.generateKItemset(ap.getMappingTable(), ap.getFileLines(), Integer.parseInt(args[1])));
 				}
 			});
 			t.start();
@@ -85,7 +85,9 @@ public class Main {
 			System.out.println();
 			System.out.println();
 			ArrayList<ItemSet> frequentPatterns = new ArrayList<ItemSet>();
-			frequentPatterns.addAll(ap.partitioningDB(Integer.parseInt(args[2])));			
+			startTime = System.currentTimeMillis();
+			frequentPatterns.addAll(ap.partitioningDB(Integer.parseInt(args[2]), Integer.parseInt(args[1])));			
+			endTime = System.currentTimeMillis();
 			System.out.println();
 			System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(frequentPatterns));
 			System.out.println();
@@ -97,7 +99,7 @@ public class Main {
 		System.out.println();
 		System.out.println("\nStart Time: " + new SimpleDateFormat("HH:mm:ss").format(new Date(startTime)));
 		System.out.println("End Time: " + new SimpleDateFormat("HH:mm:ss").format(new Date(endTime)));
-		System.out.println("\nELAPSED TIME: " + new SimpleDateFormat("HH:mm:ss").format(new Date(duration)));
+		System.out.println("\nELAPSED TIME: " + new SimpleDateFormat("mm:ss").format(new Date(duration)));
 		//System.out.println("ELAPSED TIME: "+getElapsedTimeHoursMinutesFromMilliseconds(duration));
 	}
 	

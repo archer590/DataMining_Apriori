@@ -123,30 +123,35 @@ import java.util.StringTokenizer;
 		return mappingTable.values();
 	}
 	
-	public ArrayList<ItemSet> generateKItemset(HashMap<Integer, Item> mappingTable) {
+	/**
+	 * Generates the k-itemsets for the given transactions.
+	 * @param mappingTable
+	 * @return The list of k-itemsets generated.
+	 */
+	public ArrayList<ItemSet> generateKItemset(HashMap<Integer, Item> mappingTable, ArrayList<String> lines, int minSup) {
 		ArrayList<ItemSet> candidates = new ArrayList<ItemSet>();
 		ArrayList<ItemSet> itemsets = new ArrayList<ItemSet>();
 		System.out.println("GENERATING ITEMSETS OF SIZE 1...");
 		candidates = populateFirstKItemSets(mappingTable);
 		System.out.println("Performing pruning: NOT NECCESSARY FOR k = 1");
-		itemsets.addAll(computeSupport(candidates, mappingTable));
+		itemsets.addAll(computeSupport(candidates, mappingTable, lines));
 		System.out.println("Itemsets for k = 1: "+ itemsets);
 		System.out.println("Support:");
-		itemsets = checkCandidateSupport(itemsets);
+		itemsets = checkCandidateSupport(itemsets, minSup);
 		System.out.println("**************************************************************************************************");
 		for(int k = 2; candidates.size() != 0; k++){
 			System.out.println("GENERATING ITEMSETS OF SIZE " + k + "...");
-			candidates = candidateGeneration(itemsets, k); 
+			candidates = candidateGeneration(itemsets, k);
 			if(candidates.size() != 0){
 				ArrayList<ItemSet> candGen = new ArrayList<ItemSet>();
 				System.out.println("Candidates generated (not pruned):  " + candidates);
 				System.out.println("Perorming pruning:");
 				candGen = pruning(k, candidates, itemsets);
 				System.out.println("Pruned: " + candGen);
-				candGen = computeSupport(candGen, mappingTable);
+				candGen = computeSupport(candGen, mappingTable, lines);
 				System.out.println("Computed support: " + candGen);
 				System.out.println("Support:");
-				candGen = checkCandidateSupport(candGen);
+				candGen = checkCandidateSupport(candGen, minSup);
 				System.out.println("Checked support: " + candGen);
 				itemsets.addAll(candGen);
 				System.out.println("Itemsets for k = " + k + ": " + itemsets);
@@ -190,18 +195,16 @@ import java.util.StringTokenizer;
 	}
 	
 	
-	public ArrayList<ItemSet> computeSupport(ArrayList<ItemSet> itemsets, HashMap<Integer, Item> mappingTable) {
+	public ArrayList<ItemSet> computeSupport(ArrayList<ItemSet> itemsets, HashMap<Integer, Item> mappingTable,  ArrayList<String> partitionLines) {
 		ArrayList<ItemSet> result = new ArrayList<ItemSet>();
 		for (ItemSet is : itemsets) {
 			ArrayList<Integer> isItems = is.getItems();
 			is.setItemSupport(0);
-			for (String s : fileLines) {
+			for (String s : partitionLines) {
 				String[] splitted = s.split(",");
 				boolean isPresent = false;
 				for (int i = 0; i < isItems.size(); i++) {
 					Item it = mappingTable.get(isItems.get(i));
-					if(it == null)
-						System.out.println("IS NULL, CAZZO!!!");
 					int index = it.getAttributeOrder();
 					String aux = splitted[index];
 					if (aux.equals((String) it.getAttributeValue()))
@@ -211,7 +214,6 @@ import java.util.StringTokenizer;
 						break;
 					}
 				}
-				
 				if(isPresent){
 					is.setItemSupport(is.getItemSupport()+1);
 				}
@@ -221,7 +223,7 @@ import java.util.StringTokenizer;
 		return result;
 	}
 	
-	public ArrayList<ItemSet> checkCandidateSupport(ArrayList<ItemSet> toCheck) {
+	public ArrayList<ItemSet> checkCandidateSupport(ArrayList<ItemSet> toCheck, int minSup) {
 		ArrayList<ItemSet> aux = toCheck;
 		for (ItemSet is : aux.toArray(new ItemSet[] {}))
 			if (is.getItemSupport() < minSup){
@@ -235,34 +237,33 @@ import java.util.StringTokenizer;
 		return aux;
 	}
 	
-	public ArrayList<ItemSet> pruning(int k, ArrayList<ItemSet> candidates, ArrayList<ItemSet> itemsets){			
-			ArrayList<ItemSet> toReturn = new ArrayList<ItemSet>();
-			ArrayList<String> combinations = null;
-			for(ItemSet is : candidates){
-				System.out.print("\n\tcandidate: " + is.toString());
-				boolean check = false;
-				combinations = comb1(is.toItemString(), k-1);
-				System.out.print(", possible subset: ");
-				printCombinations(combinations);
-				for(String s : combinations){
-					ArrayList<String> currentCombination = toArrayList(s);
-					for(int i = 0; i < itemsets.size(); i++){
-						ItemSet isK = itemsets.get(i);
-						if(isK.getItems().size() == k-1){
-							check = isK.contains(currentCombination);
-							if(check)
-								break;
-						}
+	public ArrayList<ItemSet> pruning(int k, ArrayList<ItemSet> candidates, ArrayList<ItemSet> itemsets){
+		ArrayList<ItemSet> toReturn = new ArrayList<ItemSet>();
+		ArrayList<String> combinations = null;
+		for(ItemSet is : candidates){
+			System.out.print("\n\tcandidate: " + is.toString());
+			boolean check = false;
+			combinations = comb1(is.toItemString(), k-1);
+			System.out.print(", possible subset: ");
+			printCombinations(combinations);
+			for(String s : combinations){
+				ArrayList<String> currentCombination = toArrayList(s);
+				for(int i = 0; i < itemsets.size(); i++){
+					ItemSet isK = itemsets.get(i);
+					if(isK.getItems().size() == k-1){
+						check = isK.contains(currentCombination);
+						if(check)
+							break;
 					}
-					if(!check)
-						break;
 				}
-				if(check){
-					toReturn.add(is);
-				}
+				if(!check)
+					break;
 			}
-
-			return toReturn;
+			if(check){
+				toReturn.add(is);
+			}
+		}
+		return toReturn;
 	}
 	
 	public Item contains(Collection<Item> items, Item i){
@@ -371,7 +372,7 @@ import java.util.StringTokenizer;
     }
     
     @SuppressWarnings("resource")
-	public ArrayList<ItemSet> partitioningDB(int linesPerPartition) throws IOException{
+	public ArrayList<ItemSet> partitioningDB(int linesPerPartition, int minSup) throws IOException{
     	System.out.println("###### SETTING NUMBER PARTITIONS ######");
     	int numberOfTransactions = 0;
     	String currentLine = br.readLine();
@@ -410,9 +411,9 @@ import java.util.StringTokenizer;
 				i++;
 		} while (j < numberOfTransactions);
 		br.close();
-		long endTime = System.currentTimeMillis();
-		long duration = endTime - startTime;
-		System.out.println("\nELAPSED TIME PARTITIONING: " + new SimpleDateFormat("mm:ss").format(new Date(duration)));
+//		long endTime = System.currentTimeMillis();
+//		long duration = endTime - startTime;
+//		System.out.println("\nELAPSED TIME PARTITIONING: " + new SimpleDateFormat("mm:ss").format(new Date(duration)));
 		
 //		System.out.println();
 //		System.out.print("Partitions created: "+partitions.size());
@@ -452,7 +453,7 @@ import java.util.StringTokenizer;
 				
 				@Override
 				public void run() {		
-					partitionItemsSets.addAll(generateKItemset(currentMappingTable));
+					partitionItemsSets.addAll(generateKItemset(currentMappingTable, currentPartition.getTransactions(), minSup));
 				}
 			});
 			
@@ -488,9 +489,9 @@ import java.util.StringTokenizer;
 //		System.out.println("###### SECOND SCAN: CREATING GLOBAL FREQUENT PATTERNS ######");
 //		System.out.println();
 		
-		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates, mappingTable);
+		ArrayList<ItemSet> toCheck = computeSupport(globalCandidates, mappingTable, fileLines);
 		ArrayList<ItemSet> globalFrequentPattern = new ArrayList<ItemSet>();
-		globalFrequentPattern.addAll(checkCandidateSupport(toCheck));
+		globalFrequentPattern.addAll(checkCandidateSupport(toCheck, minSup*allPartitions.size()));
 		
 		System.out.println("\nTime needed: " + new SimpleDateFormat("mm:ss").format(new Date((System.currentTimeMillis() - startTime))));
 		
