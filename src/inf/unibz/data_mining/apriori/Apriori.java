@@ -23,7 +23,6 @@ import java.util.StringTokenizer;
 		 public static final String[] ATTRIBUTES_NAME =
 	 {"age","job","marital","education","default","balance","housing","loan","contact","day","month","duration","campaign","pdays","previuos","poutcome","y"};
 //	public static final String[] ATTRIBUTES_NAME = { "first", "second", "third", "fourth", "fifth" };
-	private int minSup;
 	ArrayList<ItemSet> itemsets;
 	ArrayList<String> fileLines;
 	ArrayList<ArrayList<String>> partitions;
@@ -37,7 +36,6 @@ import java.util.StringTokenizer;
 		fileLines = new ArrayList<String>();
 		mappingTable = new HashMap<Integer, Item>();
 		FileReader fr = null;
-		this.minSup = minSup;
 		try {
 			fr = new FileReader(file);
 		} catch (FileNotFoundException e) {
@@ -381,9 +379,8 @@ import java.util.StringTokenizer;
     	return reversedTable;
     }
     
-    @SuppressWarnings("resource")
 	public ArrayList<ItemSet> partitioningDB(int linesPerPartition, int minSup) throws IOException{
-    	System.out.println("###### SETTING NUMBER PARTITIONS ######");
+    	System.out.println("###### SETTING NUMBER OF PARTITIONS ######");
     	int numberOfTransactions = 0;
     	String currentLine = br.readLine();
 		while (currentLine != null) {
@@ -536,29 +533,7 @@ import java.util.StringTokenizer;
 					subsetSupport++;
 			}
 		}
-		
 		return subsetSupport;
 	}
-    
-    
-//    public ArrayList<ItemSet> extractMaxItemsets(ArrayList<ItemSet> itemsets){
-//    	ArrayList<ItemSet> result = new ArrayList<ItemSet>();
-//    	ItemSet last = itemsets.get(itemsets.size() - 1);
-//    	int maxSize = last.getItems().size();
-//    	for(int i = itemsets.size() - 1; i >= 0; i--){
-//    		if(itemsets.get(i).getItems().size() == maxSize)
-//    			result.add(itemsets.get(i));
-//    	}
-//    	return result;
-//    }
-        
-//    public ArrayList<String> generateSubsets(ArrayList<ItemSet> maxItemSets){
-//    	ArrayList<String> result = new ArrayList<String>();
-//    	for(ItemSet is : maxItemSets){
-//    		for(int i = is.getItems().size() - 1; i > 0; i--)
-//    			result.addAll(comb1(is.toItemString(), i));
-//    	}
-//    	return result;
-//    }    
     
 }

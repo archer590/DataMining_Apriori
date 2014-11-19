@@ -1,6 +1,6 @@
 package inf.unibz.data_mining.components;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class AssociationRule {
 	
@@ -63,6 +63,20 @@ public class AssociationRule {
 	
 	public String toString(){
 		return left.toString() + " ---> " + right.toString();
+	}
+	
+	public String reversedToString(HashMap<Integer, Item> mappingTable){
+		String result = "[";
+		for(Integer i : left.getItems()){
+			Item it = mappingTable.get(i);
+			result += it.toString();
+		}
+		result += " ---> ";
+		for(Integer i : right.getItems()){
+			Item it = mappingTable.get(i);
+			result += it.toString();
+		}
+		return result;
 	}
 
 }

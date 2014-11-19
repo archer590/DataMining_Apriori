@@ -40,7 +40,6 @@ public class Main {
 			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
 			System.out.println("Done.");
 			ap = new Apriori(args[0], Integer.parseInt(args[1]));
-//			System.out.print("Scanning data file \"bank_marketing_full.arff\"... ");
 			ap.scanData();
 			System.out.println("Done.");
 			System.out.print("Generating items... ");
@@ -88,10 +87,11 @@ public class Main {
 		System.out.println();
 		ArrayList<AssociationRule> arules = ap.generateAssociationRules(frequentPatterns, 90);
 		for(AssociationRule ar  : arules){
-			System.out.println(ar.toString() + ", Confidence: " + ar.getConfidence() + "%");
+			System.out.println(ar.reversedToString(ap.getMappingTable()) + ", Confidence: " + ar.getConfidence() + "%");
 		}
 		System.out.println();
 		System.out.println("Done.");
+		System.gc();
 	}
 	
 	public static void cleanData(String input, String output) throws IOException{

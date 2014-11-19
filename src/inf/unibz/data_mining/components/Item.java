@@ -40,7 +40,7 @@ public class Item {
 	}
 
 	public String toString(){
-		return "{" + attributeName + ", " + attributeValue + "}";
+		return "{" + attributeName + " = " + attributeValue + "}";
 	}
 	
 	public boolean equals(Item t){
