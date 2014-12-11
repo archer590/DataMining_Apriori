@@ -371,9 +371,9 @@ import java.util.StringTokenizer;
     		for(int i = 0; i < is.getItems().size(); i++){
     			itemset += items.get(i) + "=" + mappingTable.get(items.get(i)).toString();
     			if(i < is.getItems().size()-1)
-    				itemset += ", ";
+    				itemset += ",";
     		}
-    		itemset += ">";
+    		itemset += ">\n";
     		reversedTable.add(itemset);
     	}
     	return reversedTable;

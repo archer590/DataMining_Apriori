@@ -35,13 +35,13 @@ public class Main {
 			System.out.println("###############################################");
 			System.out.println("######### FREQUENT PATTERN GENERATION #########");
 			System.out.println("###############################################\n");
-			System.out.print("Cleaning data... ");
-			cleanData("./bank.csv", "./bank_marketing.arff");
-			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
-			System.out.println("Done.");
+//			System.out.print("Cleaning data... ");
+//			cleanData("./bank.csv", "./bank_marketing.arff");
+//			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
+//			System.out.println("Done.");
 			ap = new Apriori(args[0], Integer.parseInt(args[1]));
 			ap.scanData();
-			System.out.println("Done.");
+//			System.out.println("Done.");
 			System.out.print("Generating items... ");
 			ap.getItems(ap.getFileLines());
 			System.out.println("Done.");
@@ -60,10 +60,10 @@ public class Main {
 			System.out.println("######### FREQUENT PATTERN GENERATION #########");
 			System.out.println("##### PARTITIONING DATABASE OPTIMIZATION ######");
 			System.out.println("###############################################\n");
-			System.out.print("Cleaning data... ");
-			cleanData("./bank.csv", "./bank_marketing.arff");
-			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
-			System.out.println("Done.");
+//			System.out.print("Cleaning data... ");
+//			cleanData("./bank.csv", "./bank_marketing.arff");
+//			cleanData("./bank-full.csv", "./bank_marketing_full.arff");
+//			System.out.println("Done.");
 			ap = new Apriori(args[0], Integer.parseInt(args[1]));
 //			System.out.print("Scanning data file \"bank_marketing.arff\"... ");
 			System.out.print("Database to partition: "+args[0]+"\nMinimum support: "+args[1]);
@@ -77,6 +77,8 @@ public class Main {
 		//reversing the mapping table to get the initial items
 		System.out.println();
 		System.out.println("FINAL ITEMSETS: " + ap.reverseMappingTable(frequentPatterns));
+		System.out.println("# OF ITEMSETS: " + frequentPatterns.size());
+		System.out.println("MAX K: " + getMaxK(frequentPatterns));
 		System.out.println();
 
 		duration = endTime - startTime;
@@ -85,10 +87,10 @@ public class Main {
 		System.out.println();
 		System.out.println("GENERATING ASSOCIATION RULES");
 		System.out.println();
-		ArrayList<AssociationRule> arules = ap.generateAssociationRules(frequentPatterns, 90);
-		for(AssociationRule ar  : arules){
+		ArrayList<AssociationRule> arules = ap.generateAssociationRules(frequentPatterns, 80);
+		for(AssociationRule ar  : arules)
 			System.out.println(ar.reversedToString(ap.getMappingTable()) + ", Confidence: " + ar.getConfidence() + "%");
-		}
+		System.out.println("# of rules: " + arules.size());
 		System.out.println();
 		System.out.println("Done.");
 		System.gc();
@@ -135,7 +137,14 @@ public class Main {
 		}
 		bw.close();
 		br.close();
-		
+	}
+	
+	public static int getMaxK(ArrayList<ItemSet> frequent){
+		int maxK = 0;
+		for(ItemSet is : frequent)
+			if(is.getItems().size() > maxK)
+				maxK = is.getItems().size();
+		return maxK;
 	}
 	
 }

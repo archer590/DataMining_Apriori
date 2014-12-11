@@ -34,14 +34,14 @@ public class CombinationsK {
     }  
 
     // read in N and k from command line, and print all subsets of size k from N elements
-    public static void main(String[] args) {
-       int N = 3;
-       int k = 2;
-       String alphabet = "068";
-       String elements = alphabet.substring(0, N);
+//    public static void main(String[] args) {
+//       int N = 3;
+//       int k = 2;
+//       String alphabet = "068";
+//       String elements = alphabet.substring(0, N);
 
-       comb1(elements, k);
-       System.out.println("Final combinations: "+combinations);
-    }
+//       comb1(elements, k);
+//       System.out.println("Final combinations: "+combinations);
+//    }
 
 }
